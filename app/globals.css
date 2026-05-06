@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-paper: #e2e8f0;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-glow: #6366f1;
+  --color-violet: #7c3aed;
+  --color-border-subtle: rgb(15 23 42 / 0.08);
+  --color-void: #020617;
+  --color-void-elevated: #0f172a;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  overflow-x: clip;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: rgb(79 70 229 / 0.12);
+}
+
+/* Fondo sutil tipo producto tech */
+.body-gradient {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(ellipse 100% 80% at 50% -30%, rgb(99 102 241 / 0.14), transparent),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgb(124 58 237 / 0.08), transparent);
+}
+
+/* Rejilla de puntos para héroes y cabeceras de página */
+.bg-dot-grid {
+  background-image: radial-gradient(rgb(15 23 42 / 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Brillo suave en bordes (cards) */
+.card-shine {
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06), 0 4px 24px -4px rgb(15 23 42 / 0.08),
+    0 12px 48px -12px rgb(79 70 229 / 0.12);
 }
