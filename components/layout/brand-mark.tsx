@@ -1,17 +1,22 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <span
+    <div
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-violet shadow-lg shadow-indigo-500/30",
+        "flex shrink-0 items-center justify-center rounded-lg overflow-hidden",
         className,
       )}
-      aria-hidden
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor">
-        <path d="M11 2h2v8h8v4h-8v8h-2v-8H3v-4h8V2z" />
-      </svg>
-    </span>
+      <Image
+        src="/logo.png"
+        alt="Predica con Poder"
+        width={40}
+        height={40}
+        className="h-full w-full object-contain"
+        priority
+      />
+    </div>
   );
 }

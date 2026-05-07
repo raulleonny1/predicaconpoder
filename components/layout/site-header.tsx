@@ -34,9 +34,12 @@ export function SiteHeader() {
             className="flex min-w-0 flex-1 items-center gap-2 transition-opacity hover:opacity-90 sm:gap-3 sm:flex-initial"
             title={siteConfig.name}
           >
-            <BrandMark className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
+            <BrandMark className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
             <span className="min-w-0 font-heading text-sm font-bold leading-snug tracking-tight text-ink sm:text-lg">
               <span className="line-clamp-2 sm:line-clamp-1">{siteConfig.name}</span>
+              <span className="block text-xs font-normal text-muted-foreground sm:text-sm sm:inline sm:ml-2">
+                {siteConfig.tagline}
+              </span>
             </span>
           </Link>
 

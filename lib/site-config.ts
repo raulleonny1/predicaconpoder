@@ -2,8 +2,8 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://predicaconpoder.vercel.app";
 
 export const siteConfig = {
-  name: "Predicar con Poder",
-  tagline: "Formación cristiana y devocional para la vida diaria",
+  name: "Predica con Poder",
+  tagline: "Formando líderes, equipando iglesias",
   description:
     "Plataforma cristiana con devocionales, estudios bíblicos gratuitos, reflexiones y recursos digitales para crecer en la fe.",
   url: siteUrl,

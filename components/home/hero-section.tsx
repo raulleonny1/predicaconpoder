@@ -29,7 +29,7 @@ export function HeroSection() {
         </div>
 
         <h1 className="mt-6 max-w-4xl text-pretty font-heading text-[1.9rem] font-extrabold leading-[1.05] tracking-tight text-ink sm:mt-8 sm:text-5xl md:text-6xl lg:text-7xl">
-          Predicar con Poder,
+          Predica con Poder,
           <span className="block bg-gradient-to-r from-accent via-accent-glow to-violet bg-clip-text text-transparent">
             tu espacio para crecer con claridad.
           </span>
