@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { DonateStrip } from "@/components/home/donate-strip";
+import { FeaturedBlog } from "@/components/home/featured-blog";
 import { FeatureGrid } from "@/components/home/feature-grid";
 import { HeroSection } from "@/components/home/hero-section";
 import { siteConfig } from "@/lib/site-config";
+import { BLOG_POSTS } from "@/lib/content/blog-posts";
 
 export const metadata: Metadata = {
   title: "Inicio",
@@ -18,10 +20,13 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const latestPosts = [...BLOG_POSTS].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 2);
+
   return (
     <>
       <HeroSection />
       <FeatureGrid />
+      <FeaturedBlog posts={latestPosts} />
       <DonateStrip />
     </>
   );

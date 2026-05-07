@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/ui/page-header";
+import { ContactForm } from "@/components/contact/contact-form";
 import { Container } from "@/components/ui/container";
-import { siteConfig } from "@/lib/site-config";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = {
   title: "Contacto",
-  description: "Contacta con Predicar con Poder: preguntas, peticiones de oración o colaboración.",
+  description: "Formulario de contacto para consultas, peticiones o solicitudes de colaboración.",
 };
 
 export default function ContactoPage() {
@@ -14,18 +14,12 @@ export default function ContactoPage() {
       <PageHeader
         eyebrow="Escríbenos"
         title="Contacto"
-        description="Pronto añadiremos un formulario. Mientras tanto, usa el correo general del ministerio."
+        description="Completa el formulario y te responderemos lo antes posible. También puedes escribirnos si tienes preguntas sobre estudios, donaciones o recursos."
       />
       <div className="border-b border-border-subtle py-12 lg:py-14">
         <Container>
-          <div className="max-w-xl rounded-2xl border border-border-subtle bg-surface p-6 card-shine sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted">Correo</p>
-            <a
-              href={`mailto:${siteConfig.links.email}`}
-              className="mt-2 block break-all text-lg font-bold text-accent transition hover:text-accent-hover"
-            >
-              {siteConfig.links.email}
-            </a>
+          <div className="mx-auto max-w-3xl">
+            <ContactForm />
           </div>
         </Container>
       </div>
