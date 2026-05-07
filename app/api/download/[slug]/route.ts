@@ -5,8 +5,12 @@ import { BIBLIOTECA_RECURSOS } from "@/lib/content/biblioteca-recursos";
 
 const resourceMap = new Map(BIBLIOTECA_RECURSOS.map((resource) => [resource.slug, resource]));
 
-export async function GET(_request: Request, { params }: { params: { slug: string } }) {
-  const resource = resourceMap.get(params.slug);
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  const { slug } = await params;
+  const resource = resourceMap.get(slug);
   if (!resource) {
     return NextResponse.json({ error: "Recurso no encontrado." }, { status: 404 });
   }
