@@ -17,7 +17,11 @@ export function TikTokSection() {
     id: normalizeTikTokId(item.id),
   }));
   const hasProfile = username.length > 0;
-  const feedItems = (posts.length ? posts : videoIds.map((id, index) => ({ id, caption: `Publicación ${index + 1} de TikTok` }))).slice(0, 5);
+  const feedItems: Array<{ id: string; caption?: string; publishedAt?: string }> = (
+    posts.length
+      ? posts
+      : videoIds.map((id, index) => ({ id, caption: `Publicación ${index + 1} de TikTok` }))
+  ).slice(0, 5);
 
   return (
     <section className="relative py-12 sm:py-16 lg:py-24" aria-labelledby="tiktok-heading">
