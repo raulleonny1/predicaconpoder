@@ -1,0 +1,26 @@
+HTTP/1.1 200 OK
+Server: nginx
+Content-Type: application/json
+Content-Length: 0
+X-Janus-Mini-Api-Forward: Janus-Mini(fast)
+Tt_orcas_res: 1
+X-Tt-Logid: 202605081520501DD6C17B9D469B55FDB5
+X-Ms-Token: mhBUn7uwmHm2dIEQ_Y-x2spDYcm5oM4_aZSgNN8INX08fFh_QEQS9CLAASPTK2sPcvOoU5YS5GHVqUXHRAsdzmpFn7r2Sdi26SEH
+Tt-Ticket-Guard-Result: 0
+Tt_stable: 1
+Access-Control-Expose-Headers: x-tt-traceflag,x-tt-logid
+Server-Timing: inner; dur=13
+x-tt-trace-host: 011b447644bf4fc1eaf42346cf2b834411b87cea795fda8e1089d8a271adfebd601fbe0fd22c8a95081aeeb1f5ed2ceab82ca746506a95bfc781b26a67198fd0fa10ef636bab1f3df46eeff480753ccad8da5cac42d2cf1ed2dfb1676c3b147e5ada188163577748436b54c07ef9c0f5a93f1d5607c0da9a5fd34d6a9df339c7562345f5f85367c76d0f5df281fb0dbdc1
+x-tt-trace-id: 00-2605081520501DD6C17B9D469B55FDB5-309D8910670DD7F1-00
+Expires: Fri, 08 May 2026 15:20:50 GMT
+Cache-Control: max-age=0, no-cache, no-store
+Pragma: no-cache
+Date: Fri, 08 May 2026 15:20:50 GMT
+X-Cache: TCP_MISS from a184-25-100-140.deploy.akamaitechnologies.com (AkamaiGHost/22.5.1-f3772c509bd97e9cbf399eab359b9b92) (-)
+Connection: keep-alive
+Set-Cookie: msToken=mhBUn7uwmHm2dIEQ_Y-x2spDYcm5oM4_aZSgNN8INX08fFh_QEQS9CLAASPTK2sPcvOoU5YS5GHVqUXHRAsdzmpFn7r2Sdi26SEH; expires=Mon, 18 May 2026 15:20:50 GMT; domain=tiktok.com; path=/; secure; SameSite=None
+x-tt-trace-tag: id=16;cdn-cache=miss;type=dyn
+Server-Timing: cdn-cache; desc=MISS, edge; dur=1, origin; dur=127
+X-Origin-Response-Time: 127,184.25.100.140
+X-Akamai-Request-ID: 7abddaee
+

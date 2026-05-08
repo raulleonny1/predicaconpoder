@@ -3,6 +3,7 @@ import { DonateStrip } from "@/components/home/donate-strip";
 import { FeaturedBlog } from "@/components/home/featured-blog";
 import { FeatureGrid } from "@/components/home/feature-grid";
 import { HeroSection } from "@/components/home/hero-section";
+import { TikTokSection } from "@/components/home/tiktok-section";
 import { siteConfig } from "@/lib/site-config";
 import { BLOG_POSTS } from "@/lib/content/blog-posts";
 
@@ -26,6 +27,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <FeatureGrid />
+      <TikTokSection />
       <FeaturedBlog posts={latestPosts} />
       <DonateStrip />
     </>

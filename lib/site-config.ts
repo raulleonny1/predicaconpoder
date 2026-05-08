@@ -11,6 +11,11 @@ export const siteConfig = {
   links: {
     email: "contacto@predicaconpoder.com",
   },
+  socials: {
+    tiktokUsername: "raull.leonj",
+    tiktokVideoIds: [] as string[], // IDs o URLs de tus últimos TikToks
+    tiktokPosts: [] as { id: string; caption?: string; publishedAt?: string }[],
+  },
   nav: [
     { href: "/", label: "Inicio" },
     { href: "/estudios", label: "Estudios bíblicos" },
