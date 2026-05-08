@@ -35,4 +35,11 @@ export const BIBLIOTECA_RECURSOS: BibliotecaRecurso[] = [
     slug: "restauracion_espiritual",
     fileName: "Restauracion_espiritual.pdf",
   },
+  {
+    title: "Respuestas sabias para corazones duros.",
+    description: "Las respuestas que deberías expresar cuando el alumno  .",
+    type: "PDF",
+    slug: "Respuestas sabias",
+    fileName: "Respuesta-hablandas-comportamientos hostiles.pdf",
+  },
 ];
