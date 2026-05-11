@@ -3,10 +3,30 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Container } from "@/components/ui/container";
 import { BlogPostFilter } from "@/components/blog/blog-post-filter";
 import { BLOG_POSTS } from "@/lib/content/blog-posts";
+import { siteConfig } from "@/lib/site-config";
+
+const blogListingDescription =
+  "Artículos cristianos diseñados para ayudar tu fe, tu estudio bíblico y tu vida diaria.";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Artículos cristianos diseñados para ayudar tu fe, tu estudio bíblico y tu vida diaria.",
+  description: blogListingDescription,
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    type: "website",
+    url: "/blog",
+    siteName: siteConfig.name,
+    locale: siteConfig.locale,
+    title: `Blog | ${siteConfig.name}`,
+    description: blogListingDescription,
+    images: [{ url: "/logo.png", alt: siteConfig.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Blog | ${siteConfig.name}`,
+    description: blogListingDescription,
+    images: ["/logo.png"],
+  },
 };
 
 export default function BlogPage() {

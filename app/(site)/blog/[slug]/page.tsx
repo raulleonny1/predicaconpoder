@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { MarkdownArticle } from "@/components/content/markdown-article";
 import { Container } from "@/components/ui/container";
 import { BLOG_POSTS } from "@/lib/content/blog-posts";
+import { siteConfig } from "@/lib/site-config";
+
+const defaultBlogShareImage = "/logo.png";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -14,9 +17,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const post = BLOG_POSTS.find((item) => item.slug === slug);
   if (!post) return { title: "Entrada" };
+
+  const imagePath = post.openGraphImage ?? defaultBlogShareImage;
+  const canonicalPath = `/blog/${post.slug}`;
+  const publishedTime = `${post.publishedAt}T12:00:00.000Z`;
+
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      type: "article",
+      url: canonicalPath,
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      title: post.title,
+      description: post.excerpt,
+      publishedTime,
+      section: post.categories[0],
+      images: [
+        {
+          url: imagePath,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+      images: [imagePath],
+    },
   };
 }
 

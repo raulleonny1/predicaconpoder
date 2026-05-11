@@ -47,11 +47,13 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [{ url: "/logo.png", alt: siteConfig.name }],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
+    images: ["/logo.png"],
   },
   robots: {
     index: true,

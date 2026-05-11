@@ -4,6 +4,8 @@ export type BlogPost = {
   excerpt: string;
   publishedAt: string;
   categories: string[];
+  /** Ruta bajo `public/` (p. ej. `/images/foto.png`). Vista previa al compartir; si falta, se usa `/logo.png`. */
+  openGraphImage?: string;
   body: string;
 };
 
@@ -15,6 +17,7 @@ export const BLOG_POSTS: BlogPost[] = [
       "Dios no nos creó para el dolor ni la soledad: plantó un huerto antes de formar al hombre. Del primer hogar al hogar eterno, la Escritura nos invita a confiar en sus promesas.",
     publishedAt: "2026-05-11",
     categories: ["Esperanza", "Reflexión", "Promesas"],
+    openGraphImage: "/images/arbol-verde.png",
     body: `
 En el principio, Dios no creó al ser humano para el dolor, la soledad ni el miedo. Lo colocó en el Edén, el primer hogar de la humanidad: un lugar preparado con amor, belleza y propósito. Allí comenzó nuestra historia, nuestra raza, nuestra vida. Cada árbol, cada río y cada amanecer hablaban del cuidado perfecto de Dios.
 
