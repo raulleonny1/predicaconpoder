@@ -9,6 +9,58 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "eden-el-hogar-que-dios-preparo-y-la-esperanza-del-cielo",
+    title: "Edén: el hogar que Dios preparó y la esperanza del cielo",
+    excerpt:
+      "Dios no nos creó para el dolor ni la soledad: plantó un huerto antes de formar al hombre. Del primer hogar al hogar eterno, la Escritura nos invita a confiar en sus promesas.",
+    publishedAt: "2026-05-11",
+    categories: ["Esperanza", "Reflexión", "Promesas"],
+    body: `
+En el principio, Dios no creó al ser humano para el dolor, la soledad ni el miedo. Lo colocó en el Edén, el primer hogar de la humanidad: un lugar preparado con amor, belleza y propósito. Allí comenzó nuestra historia, nuestra raza, nuestra vida. Cada árbol, cada río y cada amanecer hablaban del cuidado perfecto de Dios.
+
+La Biblia lo dice con sencillez y profundidad: **"Y Jehová Dios plantó un huerto en Edén… y puso allí al hombre que había formado"** (Génesis 2:8). Antes de que Adán existiera, Dios ya había preparado su casa. No fue un detalle secundario; fue el orden de su corazón: primero el lugar, después la familia que lo habitaría.
+
+### Más que un jardín: una declaración de amor
+
+El Edén no era solo un jardín exuberante. Era la evidencia de que **Dios siempre piensa primero en sus hijos**. El cielo y la tierra, la luz y el orden, la comida y el descanso, la compañía y la misión: todo convergía en una sola verdad — el hombre y la mujer eran amados antes de ser llamados a obrar.
+
+Cuando hoy sentimos cansancio, ansiedad o vacío, no es porque Dios haya cambiado de idea sobre el diseño del alma. Es el eco de una historia interrumpida por el pecado. La desobediencia cerró las puertas de aquel hogar perfecto y la humanidad quedó, en cierto sentido, lejos de casa. El dolor entró, la vergüenza creció y el miedo encontró terreno. Pero la historia no termina ahí.
+
+### Dios no abandonó su sueño
+
+La Escritura no minimiza la caída; y aun así, no nos deja sin esperanza. **Dios no abandonó su sueño** de vivir con su pueblo en paz, en presencia, en gozo. A lo largo de los siglos, prometió restauración, envió a su Hijo y abrió un camino nuevo. Lo que perdimos en Adán, lo recuperamos en Cristo — no como un regreso idéntico al huerto antiguo, sino como **una redención mayor**, sellada en sangre y confirmada en resurrección.
+
+Pablo escribe palabras que abren el corazón hacia lo invisible: **"Cosas que ojo no vio, ni oído oyó, ni han subido en corazón de hombre, son las que Dios ha preparado para los que le aman"** (1 Corintios 2:9). Si el Edén fue preparado para el inicio de la humanidad, el cielo ha sido preparado para el **final glorioso de los redimidos**. Si el primer hogar era hermoso, ¿qué será el lugar eterno donde no habrá muerte, ni llanto, ni dolor, sino vida plena junto a Jesús (Apocalipsis 21:4)?
+
+![Árboles y luz: recordatorio del primer hogar y de la casa que Dios prepara](/images/arbol-verde.png)
+
+### Reflexión: tu corazón todavía recuerda el hogar
+
+Tal vez hoy cargas preocupaciones que no puedes resolver de un día para otro, o una soledad que nadie ve del todo. Es humano anhelar un lugar donde seamos comprendidos, cuidados y en paz. Ese anhelo no es un error: **es una brújula** que apunta a lo que Dios siempre quiso darnos.
+
+La fe no nos pide fingir que todo está bien. Nos invita a descansar en **Aquel que es bueno, fiel y cumple lo que promete**. Jesús dijo que iba a preparar lugar (Juan 14:2-3). No fue una frase bonita de despedida; fue la continuación del mismo Dios que plantó el huerto antes de formar al hombre. **La misma ternura, el mismo propósito, la misma fidelidad.**
+
+### Confía en las promesas de Dios
+
+Confiar no es ignorar el dolor; es anclar la vida en promesas que **permanecen firmes más allá de lo pasajero**. Algunas formas sencillas de practicar esa confianza hoy:
+
+1. **Lee y repite en voz alta** una promesa concreta (por ejemplo, Romanos 8:28, Isaías 41:10 o Salmo 23) y pregúntate qué actitud de obediencia o de descanso en Dios te invita a vivir.
+2. **Cuenta una evidencia reciente** de cuidado divino: un abrazo a tiempo, un versículo que llegó justo, la fuerza para un día difícil.
+3. **Habla con Dios con honestidad** sobre lo que te asusta; Él ya lo sabe y sigue llamándote hijo o hija.
+4. **Camina un paso de obediencia pequeña** — perdonar, servir, pedir ayuda, guardar silencio antes de reaccionar — como respuesta de gratitud, no como pago de una deuda.
+
+La promesa final no depende de tu rendimiento perfecto, sino de **la fidelidad de Dios** en Cristo. Si estás en Él, el hogar eterno no es un rumor: es **un lugar ya asegurado** por quien jamás falló.
+
+### Cierre: un ancla para el camino
+
+Si el Edén nos enseña que Dios se adelanta con bondad, el cielo nos recuerda que **Él no deja su obra a medias**. El mismo que plantó el huerto prepara la morada eterna. Mientras tanto, caminamos con esperanza, llevando su paz a quienes aún sienten el frío de estar lejos de casa.
+
+> "En la casa de mi Padre muchas moradas hay… voy, pues, a preparar lugar para vosotros… vendré otra vez, y os tomaré a mí mismo, para que donde yo esté, vosotros también estéis." (Juan 14:2-3)
+
+Que esta verdad te sostenga hoy: **no fuiste creado para quedarte en el miedo**, sino para ser guiado, un día, a la presencia donde todo será **al fin** "muy bueno" otra vez.
+    `.trim(),
+  },
+  {
     slug: "reflexion-sobre-fe-y-confianza",
     title: "Fe y confianza cuando no ves el camino completo",
     excerpt:

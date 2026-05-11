@@ -57,6 +57,11 @@ const components: Components = {
       {children}
     </blockquote>
   ),
+  img: ({ alt, ...props }) => (
+    <span className="mt-8 block overflow-hidden rounded-2xl border border-border-subtle shadow-sm">
+      <img alt={alt ?? ""} className="w-full object-cover" loading="lazy" {...props} />
+    </span>
+  ),
 };
 
 export function MarkdownArticle({ markdown, className }: MarkdownArticleProps) {
