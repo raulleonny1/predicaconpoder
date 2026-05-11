@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BlogReadCounter } from "@/components/blog/blog-read-counter";
 import { MarkdownArticle } from "@/components/content/markdown-article";
 import { Container } from "@/components/ui/container";
 import { BLOG_POSTS } from "@/lib/content/blog-posts";
@@ -66,6 +67,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           <article className="mt-10">
             <MarkdownArticle markdown={post.body} />
           </article>
+          <BlogReadCounter slug={post.slug} />
         </div>
       </Container>
     </div>
