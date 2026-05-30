@@ -9,16 +9,29 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
+import { mapAuthError } from "@/lib/auth/map-auth-error";
 import { getClientAuth, isFirebaseConfigured } from "@/lib/firebase-client";
+
+function shouldFallbackToRedirect(error: unknown): boolean {
+  if (!(error instanceof FirebaseError)) return false;
+  return (
+    error.code === "auth/popup-blocked" ||
+    error.code === "auth/cancelled-popup-request" ||
+    error.code === "auth/operation-not-supported-in-this-environment"
+  );
+}
 
 type AuthContextValue = {
   user: User | null;
@@ -47,10 +60,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    let settled = false;
+    const finishLoading = () => {
+      if (!settled) {
+        settled = true;
+        setLoading(false);
+      }
+    };
+
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setLoading(false);
+      finishLoading();
     });
+
+    void getRedirectResult(auth)
+      .catch((e) => setError(mapAuthError(e)))
+      .finally(finishLoading);
+
     return unsub;
   }, []);
 
@@ -62,10 +88,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(msg);
     }
     setError(null);
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithPopup(auth, provider);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "No se pudo iniciar sesión con Google.";
+      if (shouldFallbackToRedirect(e)) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      const msg = mapAuthError(e);
       setError(msg);
       throw e;
     }
@@ -82,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Credenciales incorrectas.";
+      const msg = mapAuthError(e);
       setError(msg);
       throw e;
     }
@@ -99,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "No se pudo crear la cuenta.";
+      const msg = mapAuthError(e);
       setError(msg);
       throw e;
     }

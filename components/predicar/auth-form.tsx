@@ -38,13 +38,13 @@ export function AuthForm({ compact, onSuccess, redirectHref = "/predicar" }: Aut
       await action();
       onSuccess?.();
     } catch (e) {
-      setLocalError(mapAuthError(e instanceof Error ? e.message : "Error"));
+      setLocalError(mapAuthError(e));
     } finally {
       setBusy(false);
     }
   };
 
-  const displayError = localError ?? (error ? mapAuthError(error) : null);
+  const displayError = localError ?? error;
 
   return (
     <div className={cn(!compact && "mx-auto w-full max-w-md")}>
