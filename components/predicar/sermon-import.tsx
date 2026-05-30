@@ -28,6 +28,7 @@ const ROLE_LABELS: Record<string, string> = {
 export function SermonImport() {
   const { replaceSermon, sermon } = useSermon();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +96,28 @@ export function SermonImport() {
     }
 
     setPreview(null);
+    setOpen(false);
   };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 rounded-xl border border-border-subtle bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-accent/30 hover:bg-canvas"
+      >
+        <svg className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+        Importar predicación
+      </button>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-dashed border-accent/35 bg-gradient-to-br from-indigo-50/80 to-violet-50/50 p-4 sm:p-5">
@@ -107,14 +129,24 @@ export function SermonImport() {
             conclusión aunque el documento no lo diga explícitamente.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={loading}
-          className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-bold text-white transition hover:bg-void-elevated disabled:opacity-50"
-        >
-          {loading ? "Analizando…" : "Elegir archivo"}
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={loading}
+            className="rounded-xl bg-ink px-4 py-2.5 text-sm font-bold text-white transition hover:bg-void-elevated disabled:opacity-50"
+          >
+            {loading ? "Analizando…" : "Elegir archivo"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            disabled={loading}
+            className="rounded-xl border border-border-subtle px-4 py-2.5 text-sm font-semibold text-muted transition hover:border-accent/30 hover:text-ink disabled:opacity-50"
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
 
       <input
