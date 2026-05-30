@@ -50,7 +50,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-canvas hover:text-ink",
-                  pathname === item.href &&
+                  (pathname === item.href || (item.href === "/predicar" && pathname.startsWith("/predicar"))) &&
                     "bg-gradient-to-b from-indigo-50 to-transparent text-accent",
                 )}
               >
@@ -132,7 +132,8 @@ export function SiteHeader() {
                   onClick={() => setOpen(false)}
                   className={cn(
                     "min-h-12 rounded-xl px-4 py-3 text-base font-medium text-ink touch-manipulation transition-colors active:bg-canvas",
-                    pathname === item.href && "bg-indigo-50 font-semibold text-accent",
+                    (pathname === item.href || (item.href === "/predicar" && pathname.startsWith("/predicar"))) &&
+                      "bg-indigo-50 font-semibold text-accent",
                   )}
                 >
                   {item.label}

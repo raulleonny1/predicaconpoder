@@ -29,24 +29,23 @@ export function HeroSection() {
         </div>
 
         <h1 className="mt-6 max-w-4xl text-pretty font-heading text-[1.9rem] font-extrabold leading-[1.05] tracking-tight text-ink sm:mt-8 sm:text-5xl md:text-6xl lg:text-7xl">
-          Predica con Poder,
+          Predica con claridad,
           <span className="block bg-gradient-to-r from-accent via-accent-glow to-violet bg-clip-text text-transparent">
-            tu espacio para crecer con claridad.
+            Biblia, mensaje y visor en uno.
           </span>
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted sm:text-xl lg:text-2xl">
-          {siteConfig.tagline} con un diseño cuidado y rutas de aprendizaje prácticas para transformar tu estudio bíblico.
+          Prepara tu sermón, busca pasajes al instante (RVR 1960) y proyecta en pantalla grande — como las mejores apps de predicación.
         </p>
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted sm:mt-8 sm:text-base">
-          Aquí encontrarás estudios bíblicos, reflexiones rápidas y recursos descargables pensados para ayudarte a vivir lo
-          que aprendes, sin ruido ni complejidad.
+          Además: estudios bíblicos, blog y recursos descargables. Sin registro para empezar a predicar hoy.
         </p>
 
         <div className="mt-10 grid gap-3 sm:grid-cols-3">
           {[
-            "Estudia con guía clara",
-            "Reflexiona con propósito",
-            "Descarga recursos útiles",
+            "Biblia integrada (⌘K)",
+            "Visor para proyector",
+            "Estudios y recursos",
           ].map((item) => (
             <div
               key={item}
@@ -59,16 +58,16 @@ export function HeroSection() {
 
         <div className="mt-10 flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <Link
-            href="/estudios"
+            href="/predicar"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-accent to-accent-glow px-6 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:brightness-110 active:brightness-95 sm:w-auto sm:min-w-[12rem] sm:px-8"
           >
-            Explorar estudios
+            Empezar a predicar
           </Link>
           <Link
-            href="/blog"
+            href="/estudios"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-border-subtle bg-surface px-6 text-sm font-bold text-ink shadow-sm transition hover:border-accent/30 hover:shadow-md active:scale-[0.99] sm:w-auto sm:min-w-[12rem] sm:px-8"
           >
-            Ver reflexiones
+            Estudios bíblicos
           </Link>
         </div>
 

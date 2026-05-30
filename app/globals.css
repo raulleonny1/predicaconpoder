@@ -49,3 +49,40 @@ body {
   box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06), 0 4px 24px -4px rgb(15 23 42 / 0.08),
     0 12px 48px -12px rgb(79 70 229 / 0.12);
 }
+
+/* Visor de predicación — tipografía para proyector / TV */
+.stage-canvas {
+  font-family: var(--font-heading);
+}
+
+.stage-heading {
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  line-height: 1.1;
+}
+
+.stage-body {
+  font-size: clamp(1.5rem, 3.5vw, 2.75rem);
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.stage-verse {
+  font-size: clamp(1.35rem, 3vw, 2.35rem);
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+@keyframes stage-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: stage-fade-in 0.35s ease-out;
+}

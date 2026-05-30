@@ -5,7 +5,7 @@ export const siteConfig = {
   name: "Predica con Poder",
   tagline: "Formando líderes, equipando iglesias",
   description:
-    "Plataforma cristiana con devocionales, estudios bíblicos gratuitos, reflexiones y recursos digitales para crecer en la fe.",
+    "Herramienta para predicar con visor de pantalla grande, Biblia integrada y estudios bíblicos gratuitos para equipar a la iglesia.",
   url: siteUrl,
   locale: "es_ES",
   links: {
@@ -18,6 +18,7 @@ export const siteConfig = {
   },
   nav: [
     { href: "/", label: "Inicio" },
+    { href: "/predicar", label: "Predicar" },
     { href: "/estudios", label: "Estudios bíblicos" },
     { href: "/blog", label: "Blog" },
     { href: "/biblioteca", label: "Biblioteca" },
