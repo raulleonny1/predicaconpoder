@@ -80,18 +80,19 @@ export function StageViewer({
 
   const block = stageBlocks[activeIndex];
   const pizarra = Boolean(whiteboard && whiteboardMode);
+  const fullscreenDraw = pizarra && !compact;
   const annotations = block ? getBlockAnnotations(block.id) : { paths: [] };
 
   if (!hydrated) {
     return (
-      <div className={cn("flex items-center justify-center", compact ? "min-h-[200px]" : "min-h-screen")}>
+      <div className={cn("flex items-center justify-center", compact ? "min-h-[200px]" : "fixed inset-0")}>
         <span className="text-white/40">Cargando…</span>
       </div>
     );
   }
 
   if (blackScreen) {
-    return <div className={cn("bg-black", compact ? "min-h-[200px]" : "min-h-screen")} />;
+    return <div className={cn("bg-black", compact ? "min-h-[200px]" : "fixed inset-0")} />;
   }
 
   if (!block) {
@@ -99,7 +100,7 @@ export function StageViewer({
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-4 text-center text-white/50",
-          compact ? "min-h-[200px] px-6" : "min-h-screen px-12",
+          compact ? "min-h-[200px] px-6" : "fixed inset-0 px-12",
         )}
       >
         <p className="font-heading text-2xl">Sin diapositivas en pantalla</p>
@@ -109,46 +110,61 @@ export function StageViewer({
   }
 
   return (
-    <div
-      className={cn(
-        "stage-canvas relative flex flex-col justify-center bg-void text-white",
-        compact
-          ? "min-h-[160px] overflow-hidden px-4 py-4"
-          : "min-h-screen px-[clamp(2rem,6vw,8rem)] py-[clamp(2rem,5vh,4rem)]",
-      )}
-    >
+    <>
       <div
         className={cn(
-          "relative mx-auto w-full animate-in fade-in duration-300",
-          compact ? "max-w-full" : "max-w-[min(100%,64rem)]",
+          "stage-canvas relative flex flex-col justify-center bg-void text-white",
+          compact
+            ? "min-h-[160px] overflow-hidden px-4 py-4"
+            : "fixed inset-0 overflow-hidden overscroll-none touch-none px-[clamp(2rem,6vw,8rem)] py-[clamp(2rem,5vh,4rem)]",
           pizarra && "select-none",
         )}
+        style={fullscreenDraw ? { touchAction: "none" } : undefined}
       >
-        <StageBlockContent block={block} compact={compact} />
-        {pizarra ? (
-          <StageCanvasLayer
-            paths={annotations.paths}
-            tool={annotationTool}
-            color={annotationColor}
-            enabled
-            onAddPath={(path) => addDrawPath(block.id, path)}
-            onRemovePaths={(ids) => removeDrawPaths(block.id, ids)}
-          />
+        <div
+          className={cn(
+            "relative mx-auto w-full animate-in fade-in duration-300",
+            compact ? "max-w-full" : "max-w-[min(100%,64rem)]",
+          )}
+        >
+          <StageBlockContent block={block} compact={compact} />
+          {pizarra && compact ? (
+            <StageCanvasLayer
+              paths={annotations.paths}
+              tool={annotationTool}
+              color={annotationColor}
+              enabled
+              onAddPath={(path) => addDrawPath(block.id, path)}
+              onRemovePaths={(ids) => removeDrawPaths(block.id, ids)}
+            />
+          ) : null}
+        </div>
+        {!compact && stageBlocks.length > 1 && !pizarra ? (
+          <div className="fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-white/5 px-3 py-2 backdrop-blur-sm">
+            {stageBlocks.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "h-1.5 rounded-full transition-all",
+                  i === activeIndex ? "w-6 bg-accent-glow" : "w-1.5 bg-white/25",
+                )}
+              />
+            ))}
+          </div>
         ) : null}
       </div>
-      {!compact && stageBlocks.length > 1 && !pizarra ? (
-        <div className="fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-white/5 px-3 py-2 backdrop-blur-sm">
-          {stageBlocks.map((_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "h-1.5 rounded-full transition-all",
-                i === activeIndex ? "w-6 bg-accent-glow" : "w-1.5 bg-white/25",
-              )}
-            />
-          ))}
-        </div>
+
+      {fullscreenDraw ? (
+        <StageCanvasLayer
+          paths={annotations.paths}
+          tool={annotationTool}
+          color={annotationColor}
+          enabled
+          fullscreen
+          onAddPath={(path) => addDrawPath(block.id, path)}
+          onRemovePaths={(ids) => removeDrawPaths(block.id, ids)}
+        />
       ) : null}
-    </div>
+    </>
   );
 }

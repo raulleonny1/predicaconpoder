@@ -44,7 +44,7 @@ function drawPathOnCanvas(
     drawCheck(ctx, path.points[0] * width, path.points[1] * height, hex, Math.min(width, height) * 0.08);
     return;
   }
-  if (path.points.length < 4) return;
+  if (path.points.length < 2) return;
 
   ctx.beginPath();
   ctx.lineCap = "round";
@@ -65,11 +65,18 @@ function drawPathOnCanvas(
   ctx.stroke();
 }
 
+function normalizePoints(points: number[]): number[] {
+  if (points.length >= 4) return points;
+  if (points.length === 2) return [points[0], points[1], points[0], points[1]];
+  return points;
+}
+
 type StageCanvasLayerProps = {
   paths: DrawPath[];
   tool: AnnotationTool;
   color: WhiteboardColor;
   enabled: boolean;
+  fullscreen?: boolean;
   onAddPath: (path: DrawPath) => void;
   onRemovePaths: (ids: string[]) => void;
 };
@@ -79,6 +86,7 @@ export function StageCanvasLayer({
   tool,
   color,
   enabled,
+  fullscreen,
   onAddPath,
   onRemovePaths,
 }: StageCanvasLayerProps) {
@@ -87,6 +95,13 @@ export function StageCanvasLayer({
   const drawingRef = useRef(false);
   const livePointsRef = useRef<number[]>([]);
   const liveToolRef = useRef<"pen" | "highlighter">("pen");
+  const toolRef = useRef(tool);
+  const colorRef = useRef(color);
+  const pathsRef = useRef(paths);
+  const touchDrawingRef = useRef(false);
+  toolRef.current = tool;
+  colorRef.current = color;
+  pathsRef.current = paths;
 
   const norm = useCallback((clientX: number, clientY: number) => {
     const rect = wrapRef.current?.getBoundingClientRect();
@@ -103,6 +118,8 @@ export function StageCanvasLayer({
     if (!wrap || !canvas) return;
 
     const rect = wrap.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
@@ -114,32 +131,34 @@ export function StageCanvasLayer({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    for (const path of paths) {
+    for (const path of pathsRef.current) {
       drawPathOnCanvas(ctx, path, rect.width, rect.height);
     }
 
-    if (livePointsRef.current.length >= 4) {
+    if (livePointsRef.current.length >= 2) {
       drawPathOnCanvas(
         ctx,
         {
           id: "live",
           tool: liveToolRef.current,
-          color,
+          color: colorRef.current,
           points: livePointsRef.current,
         },
         rect.width,
         rect.height,
       );
     }
-  }, [paths, color]);
+  }, []);
 
   useEffect(() => {
     paint();
-  }, [paint]);
+  }, [paint, paths, color]);
 
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
     const ro = new ResizeObserver(() => paint());
-    if (wrapRef.current) ro.observe(wrapRef.current);
+    ro.observe(wrap);
     return () => ro.disconnect();
   }, [paint]);
 
@@ -147,7 +166,7 @@ export function StageCanvasLayer({
     (clientX: number, clientY: number) => {
       const { x, y } = norm(clientX, clientY);
       const threshold = 0.04;
-      const hit = paths.filter((path) =>
+      const hit = pathsRef.current.filter((path) =>
         path.points.some((_, i) => {
           if (i % 2 !== 0) return false;
           const px = path.points[i];
@@ -157,75 +176,161 @@ export function StageCanvasLayer({
       );
       if (hit.length > 0) onRemovePaths(hit.map((p) => p.id));
     },
-    [norm, onRemovePaths, paths],
+    [norm, onRemovePaths],
   );
 
-  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!enabled) return;
-    e.preventDefault();
-    e.stopPropagation();
+  const beginStroke = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!enabled) return;
 
-    if (tool === "check") {
-      const { x, y } = norm(e.clientX, e.clientY);
-      onAddPath({ id: createPathId(), tool: "check", color, points: [x, y] });
-      return;
-    }
+      const currentTool = toolRef.current;
 
-    if (tool === "eraser") {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      if (currentTool === "check") {
+        const { x, y } = norm(clientX, clientY);
+        onAddPath({ id: createPathId(), tool: "check", color: colorRef.current, points: [x, y] });
+        paint();
+        return;
+      }
+
+      if (currentTool === "eraser") {
+        drawingRef.current = true;
+        hitErase(clientX, clientY);
+        return;
+      }
+
       drawingRef.current = true;
-      hitErase(e.clientX, e.clientY);
-      return;
-    }
+      liveToolRef.current = currentTool === "highlighter" ? "highlighter" : "pen";
+      const { x, y } = norm(clientX, clientY);
+      livePointsRef.current = [x, y];
+      paint();
+    },
+    [enabled, hitErase, norm, onAddPath, paint],
+  );
 
-    e.currentTarget.setPointerCapture(e.pointerId);
-    drawingRef.current = true;
-    liveToolRef.current = tool === "highlighter" ? "highlighter" : "pen";
-    const { x, y } = norm(e.clientX, e.clientY);
-    livePointsRef.current = [x, y];
-    paint();
-  };
+  const moveStroke = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!drawingRef.current) return;
 
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (toolRef.current === "eraser") {
+        hitErase(clientX, clientY);
+        return;
+      }
+
+      const { x, y } = norm(clientX, clientY);
+      const pts = livePointsRef.current;
+      const lastX = pts[pts.length - 2];
+      const lastY = pts[pts.length - 1];
+      if (lastX !== undefined && Math.hypot(x - lastX, y - lastY) < 0.002) return;
+      livePointsRef.current = [...pts, x, y];
+      paint();
+    },
+    [hitErase, norm, paint],
+  );
+
+  const endStroke = useCallback(() => {
     if (!drawingRef.current) return;
-    if (tool === "eraser") {
-      hitErase(e.clientX, e.clientY);
-      return;
-    }
-    const { x, y } = norm(e.clientX, e.clientY);
-    livePointsRef.current = [...livePointsRef.current, x, y];
-    paint();
-  };
 
-  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drawingRef.current) return;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    if (tool !== "eraser" && livePointsRef.current.length >= 4) {
+    if (toolRef.current !== "eraser" && livePointsRef.current.length >= 2) {
       onAddPath({
         id: createPathId(),
         tool: liveToolRef.current,
-        color,
-        points: livePointsRef.current,
+        color: colorRef.current,
+        points: normalizePoints(livePointsRef.current),
       });
     }
+
     drawingRef.current = false;
     livePointsRef.current = [];
     paint();
+  }, [onAddPath, paint]);
+
+  /* iPad/iOS: touch nativo + bloquear scroll/bounce mientras se dibuja */
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || !enabled) return;
+
+    const stopScroll = (e: TouchEvent) => {
+      if (e.touches.length > 1) return;
+      e.preventDefault();
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      touchDrawingRef.current = true;
+      const touch = e.touches[0];
+      beginStroke(touch.clientX, touch.clientY);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchDrawingRef.current || e.touches.length !== 1) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      moveStroke(touch.clientX, touch.clientY);
+    };
+
+    const onTouchEnd = () => {
+      if (!touchDrawingRef.current) return;
+      touchDrawingRef.current = false;
+      endStroke();
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", stopScroll, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", stopScroll);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [beginStroke, enabled, endStroke, moveStroke]);
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!enabled || e.pointerType === "touch") return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    beginStroke(e.clientX, e.clientY);
+  };
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!drawingRef.current || e.pointerType === "touch") return;
+    e.preventDefault();
+    e.stopPropagation();
+    moveStroke(e.clientX, e.clientY);
+  };
+
+  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
+    e.preventDefault();
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    endStroke();
   };
 
   return (
     <div
       ref={wrapRef}
       className={cn(
-        "absolute inset-0 z-10 touch-none",
+        "z-30 touch-none select-none",
+        fullscreen ? "fixed inset-0" : "absolute inset-0",
         enabled && tool === "pen" && "cursor-crosshair",
         enabled && tool === "highlighter" && "cursor-cell",
         enabled && tool === "check" && "cursor-pointer",
         enabled && tool === "eraser" && "cursor-grab",
         !enabled && "pointer-events-none",
       )}
+      style={{
+        touchAction: "none",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -270,6 +375,7 @@ export function WhiteboardToolbar({
         "rounded-2xl border border-white/15 bg-black/75 p-2 backdrop-blur-md",
         compact ? "text-xs" : "text-sm",
       )}
+      style={{ touchAction: "manipulation" }}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <button
