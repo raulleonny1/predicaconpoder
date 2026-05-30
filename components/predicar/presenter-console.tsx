@@ -5,8 +5,10 @@ import { useEffect } from "react";
 import { PresenterNotesPanel } from "@/components/predicar/presenter-notes-panel";
 import { PresenterTimer } from "@/components/predicar/presenter-timer";
 import { StageViewer } from "@/components/predicar/stage-viewer";
+import { WhiteboardToolbar } from "@/components/predicar/stage-whiteboard";
 import { TranslationPicker } from "@/components/predicar/translation-picker";
 import { useSermon } from "@/lib/sermon/sermon-context";
+import { getBlockDisplayLabel } from "@/lib/sermon/types";
 import { cn } from "@/lib/utils";
 
 export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
@@ -20,6 +22,14 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
     blackScreen,
     setActiveIndex,
     openNewSermonDialog,
+    activeStageBlock,
+    whiteboardMode,
+    annotationTool,
+    annotationColor,
+    setWhiteboardMode,
+    setAnnotationTool,
+    setAnnotationColor,
+    clearBlockAnnotations,
   } = useSermon();
 
   useEffect(() => {
@@ -40,8 +50,8 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
   }, [goNext, goPrev, toggleBlackScreen]);
 
   return (
-    <div className="flex h-full min-h-[min(100dvh-6rem,900px)] flex-col rounded-2xl border border-border-subtle bg-void overflow-hidden shadow-xl">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
+    <div className="flex h-full min-h-[min(100dvh-8rem,900px)] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3 sm:px-4">
         <div className="min-w-0">
           <p className="truncate font-heading text-sm font-bold text-white">{sermon.title}</p>
           <p className="text-xs text-white/50">
@@ -54,21 +64,36 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
             href="/predicar/visor"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110"
+            className="inline-flex min-h-11 items-center rounded-lg bg-accent px-3 py-2 text-xs font-bold text-white transition hover:brightness-110"
           >
             Visor ↗
           </Link>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(140px,32%)_auto_minmax(0,1fr)]">
+      <div className="grid min-h-0 flex-1 grid-rows-[minmax(120px,26%)_auto_auto_minmax(0,1fr)]">
         <div className="relative min-h-0 overflow-hidden border-b border-white/10">
-          <StageViewer compact />
+          <StageViewer compact whiteboard />
           {blackScreen ? (
             <div className="absolute inset-0 flex items-center justify-center bg-black text-xs text-white/40">
               Pantalla en negro (B)
             </div>
           ) : null}
+        </div>
+
+        <div className="shrink-0 border-b border-white/10 p-3">
+          <WhiteboardToolbar
+            compact
+            activeTool={annotationTool}
+            activeColor={annotationColor}
+            whiteboardMode={whiteboardMode}
+            onToolChange={setAnnotationTool}
+            onColorChange={setAnnotationColor}
+            onToggleMode={() => setWhiteboardMode(!whiteboardMode)}
+            onClearSlide={() => {
+              if (activeStageBlock) clearBlockAnnotations(activeStageBlock.id);
+            }}
+          />
         </div>
 
         <div className="shrink-0 border-b border-white/10 p-3">
@@ -80,13 +105,13 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-white/10 p-3 space-y-3">
+      <div className="shrink-0 space-y-3 border-t border-white/10 p-3 safe-area-bottom">
         <div className="flex gap-2">
           <button
             type="button"
             onClick={goPrev}
             disabled={activeIndex <= 0}
-            className="flex-1 rounded-xl border border-white/15 py-2.5 text-sm font-bold text-white transition hover:bg-white/10 disabled:opacity-30"
+            className="flex min-h-12 flex-1 items-center justify-center rounded-xl border border-white/15 text-sm font-bold text-white transition hover:bg-white/10 disabled:opacity-30"
           >
             ← Anterior
           </button>
@@ -94,7 +119,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
             type="button"
             onClick={goNext}
             disabled={activeIndex >= stageBlocks.length - 1}
-            className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-30"
+            className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-30"
           >
             Siguiente →
           </button>
@@ -103,43 +128,47 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
           <button
             type="button"
             onClick={onOpenBible}
-            className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
+            className="inline-flex min-h-11 items-center rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
-            Biblia (⌘K)
+            Biblia
           </button>
           <button
             type="button"
             onClick={toggleBlackScreen}
             className={cn(
-              "rounded-lg px-3 py-2 text-xs font-semibold transition",
+              "inline-flex min-h-11 items-center rounded-lg px-4 py-2 text-sm font-semibold transition",
               blackScreen ? "bg-white text-void" : "border border-white/15 text-white/80 hover:bg-white/10",
             )}
           >
-            Negro (B)
+            Negro
           </button>
           <button
             type="button"
             onClick={openNewSermonDialog}
-            className="rounded-lg px-3 py-2 text-xs font-semibold text-white/40 hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-lg px-4 py-2 text-sm font-semibold text-white/40 hover:text-white"
           >
             Nuevo
           </button>
         </div>
         {stageBlocks.length > 1 ? (
-          <div className="flex gap-1 overflow-x-auto pb-1">
-            {stageBlocks.map((b, i) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setActiveIndex(i)}
-                className={cn(
-                  "shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition",
-                  i === activeIndex ? "bg-accent text-white" : "bg-white/10 text-white/70 hover:bg-white/15",
-                )}
-              >
-                {i + 1}
-              </button>
-            ))}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+            {stageBlocks.map((b, i) => {
+              const blockIndex = sermon.blocks.findIndex((x) => x.id === b.id);
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  title={getBlockDisplayLabel(b, blockIndex >= 0 ? blockIndex : i)}
+                  onClick={() => setActiveIndex(i)}
+                  className={cn(
+                    "flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-sm font-medium transition",
+                    i === activeIndex ? "bg-accent text-white" : "bg-white/10 text-white/70 hover:bg-white/15",
+                  )}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>

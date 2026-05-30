@@ -1,20 +1,30 @@
 "use client";
 
+import { FormattedText } from "@/components/predicar/formatted-text";
+import { StageCanvasLayer } from "@/components/predicar/stage-whiteboard";
 import { useSermon } from "@/lib/sermon/sermon-context";
 import type { SermonBlock } from "@/lib/sermon/types";
 import { cn } from "@/lib/utils";
 
-function StageBlockContent({ block }: { block: SermonBlock }) {
+function StageBlockContent({ block, compact }: { block: SermonBlock; compact?: boolean }) {
   if (block.type === "scripture" && block.scripture) {
     return (
-      <div className="space-y-6">
-        <p className="font-heading text-2xl font-bold tracking-wide text-accent-glow/90 sm:text-3xl">
+      <div className={cn("space-y-3", !compact && "space-y-6")}>
+        <p
+          className={cn(
+            "font-heading font-bold tracking-wide text-accent-glow/90",
+            compact ? "text-sm leading-snug" : "text-2xl sm:text-3xl",
+          )}
+        >
           {block.scripture.reference}
         </p>
-        <div className="space-y-4">
+        <div className={cn("space-y-2", !compact && "space-y-4")}>
           {block.scripture.verses.map((v) => (
-            <p key={v.verse} className="stage-verse text-pretty">
-              <sup className="mr-2 text-[0.45em] font-bold text-accent-glow/80">{v.verse}</sup>
+            <p
+              key={v.verse}
+              className={cn("text-pretty", compact ? "text-xs leading-relaxed" : "stage-verse")}
+            >
+              <sup className="mr-1 text-[0.45em] font-bold text-accent-glow/80">{v.verse}</sup>
               {v.text}
             </p>
           ))}
@@ -25,18 +35,52 @@ function StageBlockContent({ block }: { block: SermonBlock }) {
 
   if (block.type === "heading") {
     return (
-      <h1 className="stage-heading text-pretty font-heading font-extrabold tracking-tight">
-        {block.content}
+      <h1
+        className={cn(
+          "text-pretty font-heading font-extrabold tracking-tight break-words",
+          compact ? "text-base leading-snug sm:text-lg" : "stage-heading",
+        )}
+      >
+        <FormattedText content={block.content} />
       </h1>
     );
   }
 
-  return <p className="stage-body text-pretty whitespace-pre-wrap">{block.content}</p>;
+  return (
+    <p
+      className={cn(
+        "text-pretty whitespace-pre-wrap break-words",
+        compact ? "text-sm leading-relaxed" : "stage-body",
+      )}
+    >
+      <FormattedText content={block.content} />
+    </p>
+  );
 }
 
-export function StageViewer({ compact }: { compact?: boolean }) {
-  const { stageBlocks, activeIndex, blackScreen, hydrated } = useSermon();
+export function StageViewer({
+  compact,
+  whiteboard,
+}: {
+  compact?: boolean;
+  whiteboard?: boolean;
+}) {
+  const {
+    stageBlocks,
+    activeIndex,
+    blackScreen,
+    hydrated,
+    whiteboardMode,
+    annotationTool,
+    annotationColor,
+    getBlockAnnotations,
+    addDrawPath,
+    removeDrawPaths,
+  } = useSermon();
+
   const block = stageBlocks[activeIndex];
+  const pizarra = Boolean(whiteboard && whiteboardMode);
+  const annotations = block ? getBlockAnnotations(block.id) : { paths: [] };
 
   if (!hydrated) {
     return (
@@ -67,14 +111,32 @@ export function StageViewer({ compact }: { compact?: boolean }) {
   return (
     <div
       className={cn(
-        "stage-canvas flex flex-col justify-center bg-void text-white",
-        compact ? "min-h-[220px] px-6 py-8" : "min-h-screen px-[clamp(2rem,6vw,8rem)] py-[clamp(2rem,5vh,4rem)]",
+        "stage-canvas relative flex flex-col justify-center bg-void text-white",
+        compact
+          ? "min-h-[160px] overflow-hidden px-4 py-4"
+          : "min-h-screen px-[clamp(2rem,6vw,8rem)] py-[clamp(2rem,5vh,4rem)]",
       )}
     >
-      <div className="mx-auto w-full max-w-[min(100%,64rem)] animate-in fade-in duration-300">
-        <StageBlockContent block={block} />
+      <div
+        className={cn(
+          "relative mx-auto w-full animate-in fade-in duration-300",
+          compact ? "max-w-full" : "max-w-[min(100%,64rem)]",
+          pizarra && "select-none",
+        )}
+      >
+        <StageBlockContent block={block} compact={compact} />
+        {pizarra ? (
+          <StageCanvasLayer
+            paths={annotations.paths}
+            tool={annotationTool}
+            color={annotationColor}
+            enabled
+            onAddPath={(path) => addDrawPath(block.id, path)}
+            onRemovePaths={(ids) => removeDrawPaths(block.id, ids)}
+          />
+        ) : null}
       </div>
-      {!compact && stageBlocks.length > 1 ? (
+      {!compact && stageBlocks.length > 1 && !pizarra ? (
         <div className="fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-white/5 px-3 py-2 backdrop-blur-sm">
           {stageBlocks.map((_, i) => (
             <span

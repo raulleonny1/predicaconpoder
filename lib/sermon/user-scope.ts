@@ -18,3 +18,7 @@ export function libraryItemKey(userId: string | null | undefined, savedId: strin
 export function presentationKey(userId: string | null | undefined): string {
   return `pcp:presentation:${getUserScope(userId)}`;
 }
+
+export function annotationsKey(userId: string | null | undefined): string {
+  return `pcp:annotations:${getUserScope(userId)}`;
+}

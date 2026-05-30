@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   themeColor: "#4f46e5",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -70,7 +71,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${outfit.variable} ${dmSans.variable} h-full scroll-smooth`}>
+    <html
+      lang="es"
+      data-scroll-behavior="smooth"
+      className={`${outfit.variable} ${dmSans.variable} h-full scroll-smooth`}
+    >
       <body className="body-gradient min-h-full min-h-[100dvh] flex flex-col overflow-x-clip font-sans text-ink antialiased">
         <a
           href="#main-content"

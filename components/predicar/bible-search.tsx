@@ -214,7 +214,7 @@ export function BibleSearch({ open, onClose, onSelectPassage }: BibleSearchProps
   const range = normalizedRange();
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center p-4 pt-[max(1rem,8vh)] sm:p-8">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-start sm:p-8 sm:pt-[max(1rem,8vh)]">
       <button
         type="button"
         className="absolute inset-0 bg-void/70 backdrop-blur-md"
@@ -225,9 +225,9 @@ export function BibleSearch({ open, onClose, onSelectPassage }: BibleSearchProps
         role="dialog"
         aria-modal="true"
         aria-label="Búsqueda bíblica"
-        className="relative flex max-h-[min(85dvh,720px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-void-elevated shadow-2xl shadow-black/50"
+        className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-void-elevated shadow-2xl shadow-black/50 sm:max-h-[min(85dvh,720px)] sm:rounded-2xl safe-area-bottom"
       >
-        <div className="border-b border-white/10 p-4">
+        <div className="border-b border-white/10 p-4 safe-area-x">
           <div className="flex items-center gap-2">
             <svg
               className="h-5 w-5 shrink-0 text-accent-glow"
@@ -253,10 +253,18 @@ export function BibleSearch({ open, onClose, onSelectPassage }: BibleSearchProps
               }}
               onKeyDown={onInputKeyDown}
               placeholder="Juan 3:16, amor, fe, Salmo 23…"
-              className="min-w-0 flex-1 bg-transparent font-heading text-lg text-white outline-none placeholder:text-white/40"
+              className="min-h-11 min-w-0 flex-1 bg-transparent font-heading text-base text-white outline-none placeholder:text-white/40 sm:text-lg"
               autoComplete="off"
               spellCheck={false}
             />
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm font-semibold text-white/80 sm:hidden"
+              aria-label="Cerrar"
+            >
+              ✕
+            </button>
             <kbd className="hidden rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/50 sm:inline">
               Esc
             </kbd>
@@ -270,7 +278,7 @@ export function BibleSearch({ open, onClose, onSelectPassage }: BibleSearchProps
                 inputRef.current?.focus();
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+                "min-h-11 flex-1 rounded-lg px-3 text-sm font-semibold transition sm:flex-none sm:py-1.5 sm:text-xs",
                 mode === "search" ? "bg-accent text-white" : "text-white/60 hover:bg-white/10",
               )}
             >
@@ -283,7 +291,7 @@ export function BibleSearch({ open, onClose, onSelectPassage }: BibleSearchProps
                 resetBrowse();
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+                "min-h-11 flex-1 rounded-lg px-3 text-sm font-semibold transition sm:flex-none sm:py-1.5 sm:text-xs",
                 mode === "browse" ? "bg-accent text-white" : "text-white/60 hover:bg-white/10",
               )}
             >

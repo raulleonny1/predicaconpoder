@@ -1,6 +1,7 @@
 import type { BibleTranslationCode } from "@/lib/bible/translations";
 import { DEFAULT_TRANSLATION } from "@/lib/bible/translations";
-import { draftStorageKey, presentationKey } from "@/lib/sermon/user-scope";
+import type { StageAnnotationsState } from "@/lib/sermon/stage-annotations";
+import { annotationsKey, draftStorageKey, presentationKey } from "@/lib/sermon/user-scope";
 import type { PresentationState, SermonDocument, TimerState } from "@/lib/sermon/types";
 import { createDefaultSermon } from "@/lib/sermon/types";
 
@@ -91,6 +92,27 @@ export function getSyncChannel(): BroadcastChannel | null {
 function broadcastPresentation(state: PresentationState): void {
   const channel = getSyncChannel();
   channel?.postMessage({ type: "presentation", payload: state });
+}
+
+export function loadAnnotations(userId: string | null | undefined): StageAnnotationsState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(annotationsKey(userId));
+    if (!raw) return null;
+    return JSON.parse(raw) as StageAnnotationsState;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAnnotations(
+  state: StageAnnotationsState,
+  userId: string | null | undefined,
+): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(annotationsKey(userId), JSON.stringify(state));
+  const channel = getSyncChannel();
+  channel?.postMessage({ type: "annotations", payload: state });
 }
 
 export function getStageBlocks(sermon: SermonDocument) {

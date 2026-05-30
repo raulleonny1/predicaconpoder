@@ -31,6 +31,33 @@ body {
   -webkit-tap-highlight-color: rgb(79 70 229 / 0.12);
 }
 
+button,
+a,
+[role="button"],
+input[type="checkbox"] {
+  touch-action: manipulation;
+}
+
+.safe-area-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
+
 /* Fondo sutil tipo producto tech */
 .body-gradient {
   background-color: var(--color-canvas);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSermon } from "@/lib/sermon/sermon-context";
+import { stripRichTags } from "@/lib/sermon/rich-text";
 import { cn } from "@/lib/utils";
 
 export function PresenterNotesPanel() {
@@ -37,8 +38,8 @@ export function PresenterNotesPanel() {
           </p>
           <p className="mt-1 line-clamp-2 text-sm font-medium text-white/90">
             {nextBlock.type === "scripture"
-              ? nextBlock.scripture?.reference ?? nextBlock.content
-              : nextBlock.content}
+              ? nextBlock.scripture?.reference ?? stripRichTags(nextBlock.content)
+              : stripRichTags(nextBlock.content)}
           </p>
         </div>
       ) : null}
@@ -48,8 +49,10 @@ export function PresenterNotesPanel() {
           Notas de esta diapositiva
           {activeStageBlock ? (
             <span className="ml-1 font-normal normal-case text-white/35">
-              ({activeStageBlock.content.slice(0, 40)}
-              {activeStageBlock.content.length > 40 ? "…" : ""})
+              ({(() => {
+                const plain = stripRichTags(activeStageBlock.content);
+                return `${plain.slice(0, 40)}${plain.length > 40 ? "…" : ""}`;
+              })()})
             </span>
           ) : null}
         </p>

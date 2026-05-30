@@ -17,16 +17,18 @@ import {
   getContextualNotes,
   getStageBlocks,
   getSyncChannel,
+  loadAnnotations,
   loadPresentation,
   loadSermon,
   loadTimer,
   loadTranslation,
+  saveAnnotations,
   savePresentation,
   saveSermon,
   saveTimer,
   saveTranslation,
 } from "@/lib/sermon/storage";
-import { presentationKey, draftStorageKey } from "@/lib/sermon/user-scope";
+import { presentationKey, draftStorageKey, annotationsKey } from "@/lib/sermon/user-scope";
 import {
   deleteLocalSermon,
   loadLocalSermon,
@@ -43,6 +45,16 @@ import {
   type SermonDocument,
   type TimerState,
 } from "@/lib/sermon/types";
+import {
+  createDefaultAnnotationsState,
+  createEmptySlideAnnotations,
+  normalizeSlideAnnotations,
+  type AnnotationTool,
+  type DrawPath,
+  type SlideAnnotations,
+  type StageAnnotationsState,
+  type WhiteboardColor,
+} from "@/lib/sermon/stage-annotations";
 
 type SermonContextValue = {
   sermon: SermonDocument;
@@ -62,7 +74,7 @@ type SermonContextValue = {
   addBlock: (type: SermonBlockType, afterId?: string) => void;
   removeBlock: (id: string) => void;
   moveBlock: (id: string, direction: "up" | "down") => void;
-  insertScripture: (passage: BiblePassage, afterId?: string) => void;
+  insertScripture: (passage: BiblePassage, targetBlockId?: string) => void;
   setActiveIndex: (index: number) => void;
   goNext: () => void;
   goPrev: () => void;
@@ -83,6 +95,16 @@ type SermonContextValue = {
   pauseTimer: () => void;
   resetTimer: () => void;
   setTimerTarget: (minutes: number | null) => void;
+  whiteboardMode: boolean;
+  annotationTool: AnnotationTool;
+  annotationColor: WhiteboardColor;
+  setWhiteboardMode: (on: boolean) => void;
+  setAnnotationTool: (tool: AnnotationTool) => void;
+  setAnnotationColor: (color: WhiteboardColor) => void;
+  getBlockAnnotations: (blockId: string) => SlideAnnotations;
+  addDrawPath: (blockId: string, path: DrawPath) => void;
+  removeDrawPaths: (blockId: string, pathIds: string[]) => void;
+  clearBlockAnnotations: (blockId: string) => void;
 };
 
 const SermonContext = createContext<SermonContextValue | null>(null);
@@ -114,6 +136,9 @@ export function SermonProvider({
   });
   const [timerTick, setTimerTick] = useState(0);
   const [newSermonDialogOpen, setNewSermonDialogOpen] = useState(false);
+  const [annotations, setAnnotations] = useState<StageAnnotationsState>(() =>
+    createDefaultAnnotationsState(""),
+  );
   const timerRef = useRef(timer);
   const userIdRef = useRef(userId);
   const sermonRef = useRef(sermon);
@@ -144,6 +169,13 @@ export function SermonProvider({
     setActiveIndexState(0);
     setBlackScreen(false);
 
+    const storedAnnotations = loadAnnotations(userId);
+    if (storedAnnotations?.sermonId === loaded.id) {
+      setAnnotations(storedAnnotations);
+    } else {
+      setAnnotations(createDefaultAnnotationsState(loaded.id));
+    }
+
     const pres = loadPresentation(userId);
     if (pres && pres.sermonId === loaded.id) {
       setActiveIndexState(pres.activeIndex);
@@ -171,6 +203,84 @@ export function SermonProvider({
     const id = setInterval(() => setTimerTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, [timer.running]);
+
+  const persistAnnotations = useCallback(
+    (updater: StageAnnotationsState | ((prev: StageAnnotationsState) => StageAnnotationsState)) => {
+      setAnnotations((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        saveAnnotations(next, userIdRef.current);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const getBlockAnnotations = useCallback(
+    (blockId: string): SlideAnnotations => {
+      return normalizeSlideAnnotations(annotations.byBlockId[blockId]);
+    },
+    [annotations.byBlockId],
+  );
+
+  const patchBlockAnnotations = useCallback(
+    (blockId: string, patch: SlideAnnotations) => {
+      persistAnnotations((prev) => ({
+        ...prev,
+        sermonId: sermon.id,
+        byBlockId: { ...prev.byBlockId, [blockId]: patch },
+      }));
+    },
+    [persistAnnotations, sermon.id],
+  );
+
+  const setWhiteboardMode = useCallback(
+    (on: boolean) => {
+      persistAnnotations((prev) => ({ ...prev, sermonId: sermon.id, whiteboardMode: on }));
+    },
+    [persistAnnotations, sermon.id],
+  );
+
+  const setAnnotationTool = useCallback(
+    (tool: AnnotationTool) => {
+      persistAnnotations((prev) => ({ ...prev, sermonId: sermon.id, activeTool: tool }));
+    },
+    [persistAnnotations, sermon.id],
+  );
+
+  const setAnnotationColor = useCallback(
+    (color: WhiteboardColor) => {
+      persistAnnotations((prev) => ({ ...prev, sermonId: sermon.id, activeColor: color }));
+    },
+    [persistAnnotations, sermon.id],
+  );
+
+  const addDrawPath = useCallback(
+    (blockId: string, path: DrawPath) => {
+      const current = getBlockAnnotations(blockId);
+      patchBlockAnnotations(blockId, {
+        paths: [...current.paths, path],
+      });
+    },
+    [getBlockAnnotations, patchBlockAnnotations],
+  );
+
+  const removeDrawPaths = useCallback(
+    (blockId: string, pathIds: string[]) => {
+      const current = getBlockAnnotations(blockId);
+      const ids = new Set(pathIds);
+      patchBlockAnnotations(blockId, {
+        paths: current.paths.filter((p) => !ids.has(p.id)),
+      });
+    },
+    [getBlockAnnotations, patchBlockAnnotations],
+  );
+
+  const clearBlockAnnotations = useCallback(
+    (blockId: string) => {
+      patchBlockAnnotations(blockId, createEmptySlideAnnotations());
+    },
+    [patchBlockAnnotations],
+  );
 
   const persistPresentation = useCallback(
     (index: number, black: boolean) => {
@@ -234,8 +344,9 @@ export function SermonProvider({
       setActiveIndexState(0);
       setBlackScreen(false);
       persistPresentation(0, false);
+      persistAnnotations(createDefaultAnnotationsState(next.id));
     },
-    [commitSermon, persistPresentation],
+    [commitSermon, persistPresentation, persistAnnotations],
   );
 
   const setCloudId = useCallback(
@@ -307,7 +418,29 @@ export function SermonProvider({
   );
 
   const insertScripture = useCallback(
-    (passage: BiblePassage, afterId?: string) => {
+    (passage: BiblePassage, targetBlockId?: string) => {
+      if (targetBlockId) {
+        const target = sermon.blocks.find((b) => b.id === targetBlockId);
+        if (target) {
+          const blocks = sermon.blocks.map((b) =>
+            b.id === targetBlockId
+              ? {
+                  ...b,
+                  type: "scripture" as const,
+                  content: passage.reference,
+                  scripture: passage,
+                  showOnStage: b.type === "note" ? true : b.showOnStage,
+                }
+              : b,
+          );
+          commitSermon({ ...sermon, blocks });
+          const stage = getStageBlocks({ ...sermon, blocks });
+          const newIdx = stage.findIndex((b) => b.id === targetBlockId);
+          if (newIdx >= 0) setActiveIndex(newIdx);
+          return;
+        }
+      }
+
       const block: SermonBlock = {
         id: createBlockId(),
         type: "scripture",
@@ -315,13 +448,7 @@ export function SermonProvider({
         scripture: passage,
         showOnStage: true,
       };
-      const blocks = [...sermon.blocks];
-      if (afterId) {
-        const idx = blocks.findIndex((b) => b.id === afterId);
-        blocks.splice(idx + 1, 0, block);
-      } else {
-        blocks.push(block);
-      }
+      const blocks = [...sermon.blocks, block];
       commitSermon({ ...sermon, blocks });
       const stage = getStageBlocks({ ...sermon, blocks });
       const newIdx = stage.findIndex((b) => b.id === block.id);
@@ -437,8 +564,18 @@ export function SermonProvider({
       setActiveIndexState(payload.activeIndex);
       setBlackScreen(payload.blackScreen);
     };
+    const onAnnotations = (ev: MessageEvent) => {
+      if (ev.data?.type !== "annotations") return;
+      const payload = ev.data.payload as StageAnnotationsState;
+      if (payload.sermonId !== sermon.id) return;
+      setAnnotations(payload);
+    };
     channel.addEventListener("message", onMessage);
-    return () => channel.removeEventListener("message", onMessage);
+    channel.addEventListener("message", onAnnotations);
+    return () => {
+      channel.removeEventListener("message", onMessage);
+      channel.removeEventListener("message", onAnnotations);
+    };
   }, [sermon.id]);
 
   useEffect(() => {
@@ -459,6 +596,15 @@ export function SermonProvider({
             setActiveIndexState(pres.activeIndex);
             setBlackScreen(pres.blackScreen);
           }
+        } catch {
+          /* ignore */
+        }
+      }
+      const annKey = annotationsKey(userId);
+      if (e.key === annKey && e.newValue) {
+        try {
+          const ann = JSON.parse(e.newValue) as StageAnnotationsState;
+          if (ann.sermonId === sermon.id) setAnnotations(ann);
         } catch {
           /* ignore */
         }
@@ -508,6 +654,16 @@ export function SermonProvider({
       pauseTimer,
       resetTimer,
       setTimerTarget,
+      whiteboardMode: annotations.whiteboardMode,
+      annotationTool: annotations.activeTool,
+      annotationColor: annotations.activeColor,
+      setWhiteboardMode,
+      setAnnotationTool,
+      setAnnotationColor,
+      getBlockAnnotations,
+      addDrawPath,
+      removeDrawPaths,
+      clearBlockAnnotations,
     }),
     [
       sermon,
@@ -548,6 +704,16 @@ export function SermonProvider({
       pauseTimer,
       resetTimer,
       setTimerTarget,
+      annotations.whiteboardMode,
+      annotations.activeTool,
+      annotations.activeColor,
+      setWhiteboardMode,
+      setAnnotationTool,
+      setAnnotationColor,
+      getBlockAnnotations,
+      addDrawPath,
+      removeDrawPaths,
+      clearBlockAnnotations,
     ],
   );
 

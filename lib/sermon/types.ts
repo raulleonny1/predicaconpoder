@@ -2,9 +2,18 @@ import type { BiblePassage } from "@/lib/bible/types";
 
 export type SermonBlockType = "heading" | "text" | "scripture" | "note";
 
+export const BLOCK_TYPE_LABELS: Record<SermonBlockType, string> = {
+  heading: "Título",
+  text: "Texto",
+  scripture: "Escritura",
+  note: "Nota",
+};
+
 export type SermonBlock = {
   id: string;
   type: SermonBlockType;
+  /** Nombre personalizado del bloque en el editor (p. ej. "Parte uno"). */
+  label?: string;
   content: string;
   scripture?: BiblePassage;
   showOnStage: boolean;
@@ -43,6 +52,16 @@ export type CloudSermonMeta = {
 
 export function createBlockId(): string {
   return `blk_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function getBlockDisplayLabel(block: SermonBlock, index: number): string {
+  const custom = block.label?.trim();
+  if (custom) return custom;
+  return `${BLOCK_TYPE_LABELS[block.type]} ${index + 1}`;
+}
+
+export function getBlockLabelPlaceholder(block: SermonBlock, index: number): string {
+  return `${BLOCK_TYPE_LABELS[block.type]} ${index + 1}`;
 }
 
 export function createDefaultSermon(): SermonDocument {

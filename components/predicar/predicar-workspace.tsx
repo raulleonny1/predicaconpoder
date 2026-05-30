@@ -14,11 +14,15 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useSermon } from "@/lib/sermon/sermon-context";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { siteConfig } from "@/lib/site-config";
+import { cn } from "@/lib/utils";
+
+type TabletPanel = "editor" | "console";
 
 function PredicarWorkspaceInner() {
   const { user } = useAuth();
   const { insertScripture, hydrated } = useSermon();
   const [bibleOpen, setBibleOpen] = useState(false);
+  const [tabletPanel, setTabletPanel] = useState<TabletPanel>("editor");
 
   const openBible = useCallback(() => setBibleOpen(true), []);
 
@@ -47,7 +51,7 @@ function PredicarWorkspaceInner() {
       <NewSermonDialog />
 
       {!user ? (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-950">
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-950 safe-area-x">
           Modo invitado: puedes predicar y usar la Biblia.{" "}
           <Link href="/predicar/ingresar" className="font-bold text-accent hover:underline">
             Inicia sesión
@@ -56,9 +60,9 @@ function PredicarWorkspaceInner() {
         </div>
       ) : null}
 
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface/90 backdrop-blur-xl safe-area-x safe-area-top">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-90">
+          <Link href="/" className="flex min-h-11 items-center gap-2.5 transition hover:opacity-90">
             <BrandMark className="h-9 w-9" />
             <div>
               <span className="font-heading text-sm font-bold text-ink">{siteConfig.name}</span>
@@ -75,23 +79,66 @@ function PredicarWorkspaceInner() {
               href="/predicar/visor"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-xl border border-border-subtle bg-canvas px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent/30"
+              title="Abre la pantalla para proyectar (en otra pestaña). Tú te quedas aquí con el cronómetro."
+              className="inline-flex min-h-11 items-center rounded-xl border border-border-subtle bg-canvas px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent/30"
             >
-              Visor
+              Visor ↗
             </Link>
             <button
               type="button"
               onClick={openBible}
-              className="rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white transition hover:bg-void-elevated"
+              className="inline-flex min-h-11 items-center rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white transition hover:bg-void-elevated"
             >
-              Biblia ⌘K
+              Biblia
+              <span className="ml-1.5 hidden text-white/60 md:inline">⌘K</span>
             </button>
           </nav>
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-[1600px] flex-1 gap-6 px-4 py-6 sm:px-6 xl:grid-cols-[1fr_minmax(360px,44%)] xl:gap-8">
-        <section aria-label="Editor del mensaje" className="min-w-0">
+      {/* iPad / tablet vertical: alternar editor y consola */}
+      <div
+        className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 border-b border-border-subtle bg-surface/95 backdrop-blur-md lg:hidden safe-area-x"
+        role="tablist"
+        aria-label="Sección de predicación"
+      >
+        <div className="mx-auto flex max-w-[1600px] gap-1 px-4 py-2 sm:px-6">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tabletPanel === "editor"}
+            onClick={() => setTabletPanel("editor")}
+            className={cn(
+              "min-h-11 flex-1 rounded-xl text-sm font-bold transition",
+              tabletPanel === "editor"
+                ? "bg-accent text-white shadow-md shadow-indigo-500/20"
+                : "bg-canvas text-muted",
+            )}
+          >
+            Tu mensaje
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tabletPanel === "console"}
+            onClick={() => setTabletPanel("console")}
+            className={cn(
+              "min-h-11 flex-1 rounded-xl text-sm font-bold transition",
+              tabletPanel === "console"
+                ? "bg-void text-white shadow-md"
+                : "bg-canvas text-muted",
+            )}
+          >
+            Consola
+          </button>
+        </div>
+      </div>
+
+      <div className="mx-auto grid w-full max-w-[1600px] flex-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_minmax(300px,42%)] lg:gap-8 safe-area-x safe-area-bottom">
+        <section
+          aria-label="Editor del mensaje"
+          className={cn("min-w-0", tabletPanel !== "editor" && "hidden lg:block")}
+        >
           <div className="mb-4">
             <h1 className="font-heading text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
               Tu mensaje
@@ -105,7 +152,12 @@ function PredicarWorkspaceInner() {
           <SermonEditor />
         </section>
 
-        <aside className="min-h-[480px] xl:sticky xl:top-[4.5rem] xl:self-start">
+        <aside
+          className={cn(
+            "min-h-[min(100dvh-10rem,720px)] lg:sticky lg:top-[calc(4.5rem+env(safe-area-inset-top))] lg:self-start",
+            tabletPanel !== "console" && "hidden lg:block",
+          )}
+        >
           <PresenterConsole onOpenBible={openBible} />
         </aside>
       </div>
