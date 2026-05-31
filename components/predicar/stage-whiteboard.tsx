@@ -22,7 +22,7 @@ function drawCheck(
 ) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(3, size * 0.12);
+  ctx.lineWidth = Math.max(2, size * 0.1);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
@@ -33,6 +33,40 @@ function drawCheck(
   ctx.restore();
 }
 
+function isDotPath(points: number[]): boolean {
+  if (points.length < 2) return false;
+  const x0 = points[0];
+  const y0 = points[1];
+  for (let i = 2; i < points.length; i += 2) {
+    const px = points[i];
+    const py = points[i + 1];
+    if (px === undefined || py === undefined) continue;
+    if (Math.hypot(px - x0, py - y0) > 0.001) return false;
+  }
+  return true;
+}
+
+function drawDot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  tool: DrawPath["tool"],
+  hex: string,
+) {
+  const base = Math.min(width, height);
+  ctx.beginPath();
+  if (tool === "highlighter") {
+    ctx.fillStyle = hex + "55";
+    ctx.arc(x, y, Math.max(8, base * 0.016), 0, Math.PI * 2);
+  } else {
+    ctx.fillStyle = hex;
+    ctx.arc(x, y, Math.max(4, base * 0.004), 0, Math.PI * 2);
+  }
+  ctx.fill();
+}
+
 function drawPathOnCanvas(
   ctx: CanvasRenderingContext2D,
   path: DrawPath,
@@ -41,10 +75,18 @@ function drawPathOnCanvas(
 ) {
   const hex = getColorHex(path.color);
   if (path.tool === "check" && path.points.length >= 2) {
-    drawCheck(ctx, path.points[0] * width, path.points[1] * height, hex, Math.min(width, height) * 0.08);
+    drawCheck(ctx, path.points[0] * width, path.points[1] * height, hex, Math.min(width, height) * 0.055);
     return;
   }
   if (path.points.length < 2) return;
+
+  const x0 = path.points[0] * width;
+  const y0 = path.points[1] * height;
+
+  if (isDotPath(path.points)) {
+    drawDot(ctx, x0, y0, width, height, path.tool, hex);
+    return;
+  }
 
   ctx.beginPath();
   ctx.lineCap = "round";
@@ -58,7 +100,7 @@ function drawPathOnCanvas(
     ctx.lineWidth = Math.max(3, Math.min(width, height) * 0.005);
   }
 
-  ctx.moveTo(path.points[0] * width, path.points[1] * height);
+  ctx.moveTo(x0, y0);
   for (let i = 2; i < path.points.length; i += 2) {
     ctx.lineTo(path.points[i] * width, path.points[i + 1] * height);
   }
