@@ -50,7 +50,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
   }, [goNext, goPrev, toggleBlackScreen]);
 
   return (
-    <div className="flex h-full min-h-[min(100dvh-8rem,900px)] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3 sm:px-4">
         <div className="min-w-0">
           <p className="truncate font-heading text-sm font-bold text-white">{sermon.title}</p>
