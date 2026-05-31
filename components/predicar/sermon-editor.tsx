@@ -11,6 +11,12 @@ import { cn } from "@/lib/utils";
 
 const BLOCK_LABELS = BLOCK_TYPE_LABELS;
 
+function scrollFieldIntoView(el: HTMLElement) {
+  const run = () => el.scrollIntoView({ block: "center", behavior: "smooth" });
+  requestAnimationFrame(run);
+  window.setTimeout(run, 400);
+}
+
 const ADD_BLOCK_TYPES = ["heading", "text", "note"] as const;
 
 function BlockAddPanel({
@@ -229,11 +235,12 @@ function SermonBlockCard({
               value={block.content}
               onChange={(e) => updateBlock(block.id, { content: e.target.value })}
               onClick={(e) => e.stopPropagation()}
-              rows={block.type === "heading" ? 2 : 4}
+              onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
+              rows={block.type === "heading" ? 2 : 5}
               className={cn(
-                "w-full resize-y rounded-xl border border-transparent bg-canvas/60 px-3 py-2 text-ink outline-none transition focus:border-accent/30 focus:bg-surface focus:ring-2 focus:ring-accent/15",
+                "w-full min-h-[5.5rem] resize-y rounded-xl border border-border-subtle bg-white px-3 py-3 text-base leading-relaxed text-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/20",
                 block.type === "heading" && "font-heading text-lg font-bold",
-                block.type === "note" && "text-sm italic text-muted",
+                block.type === "note" && "text-sm",
               )}
               placeholder={BLOCK_LABELS[block.type]}
             />
@@ -270,7 +277,8 @@ export function SermonEditor() {
           type="text"
           value={sermon.title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full border-0 bg-transparent font-heading text-2xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/50 focus:ring-0"
+          onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
+          className="w-full rounded-xl border border-border-subtle bg-white px-3 py-2.5 font-heading text-2xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/50 focus:border-accent/40 focus:ring-2 focus:ring-accent/20"
           placeholder="Título del mensaje"
         />
 

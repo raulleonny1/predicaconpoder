@@ -46,7 +46,14 @@ function PredicarWorkspaceInner() {
   }
 
   return (
-    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden">
+    <div
+      className={cn(
+        "flex flex-col",
+        "max-xl:min-h-[100dvh] max-xl:overflow-y-auto",
+        "xl:h-[100dvh] xl:max-h-[100dvh] xl:overflow-hidden",
+        tabletPanel === "console" && "predicar-console-active",
+      )}
+    >
       <AutoCloudSave />
       <NewSermonDialog />
 
@@ -134,12 +141,14 @@ function PredicarWorkspaceInner() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 flex-col gap-4 px-4 py-4 sm:px-6 safe-area-x xl:grid xl:grid-cols-[1fr_minmax(300px,42%)] xl:gap-6 xl:overflow-hidden xl:safe-area-bottom">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 flex-col gap-4 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 safe-area-x xl:grid xl:grid-cols-[1fr_minmax(300px,42%)] xl:gap-6 xl:overflow-hidden xl:pb-4 xl:safe-area-bottom">
         <section
           aria-label="Editor del mensaje"
           className={cn(
-            "min-h-0 min-w-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1",
-            tabletPanel !== "editor" ? "hidden xl:block" : "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
+            "predicar-editor-scroll min-h-0 min-w-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1",
+            tabletPanel !== "editor"
+              ? "hidden xl:block"
+              : "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[max(2rem,env(safe-area-inset-bottom))]",
           )}
         >
           <div className="mb-4">

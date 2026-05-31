@@ -51,9 +51,21 @@ input[type="checkbox"] {
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
-/* iPad / tablet: barra Anterior·Siguiente·diapositivas siempre visible (vertical y horizontal) */
+/* Editor: espacio al escribir con teclado en iPad / móvil */
+.predicar-editor-scroll {
+  scroll-padding-bottom: min(45vh, 22rem);
+  -webkit-overflow-scrolling: touch;
+}
+
+.predicar-editor-scroll textarea,
+.predicar-editor-scroll input[type="text"] {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Barra de consola fija solo cuando la pestaña Consola está activa */
 @media (max-width: 1279px) {
-  .presenter-console-dock {
+  .predicar-console-active .presenter-console-dock {
     position: fixed;
     right: 0;
     bottom: 0;
@@ -62,7 +74,7 @@ input[type="checkbox"] {
     box-shadow: 0 -8px 32px rgb(0 0 0 / 50%);
   }
 
-  .presenter-console-body {
+  .predicar-console-active .presenter-console-body {
     padding-bottom: calc(13rem + env(safe-area-inset-bottom));
   }
 }

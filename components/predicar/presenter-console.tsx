@@ -77,8 +77,8 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
       </div>
 
       <div className="presenter-console-body min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-        <div className="relative isolate max-h-40 min-h-[7.5rem] shrink-0 overflow-hidden border-b border-white/10 bg-void">
-          <div className="h-full max-h-40 overflow-y-auto overscroll-contain">
+        <div className="relative isolate min-h-[7.5rem] max-h-[min(42vh,16rem)] shrink-0 overflow-hidden border-b border-white/10 bg-void">
+          <div className="max-h-[min(42vh,16rem)] overflow-y-auto overscroll-contain">
             <StageViewer compact whiteboard />
           </div>
           {blackScreen ? (
