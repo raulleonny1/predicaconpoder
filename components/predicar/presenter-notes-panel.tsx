@@ -5,32 +5,12 @@ import { stripRichTags } from "@/lib/sermon/rich-text";
 import { cn } from "@/lib/utils";
 
 export function PresenterNotesPanel() {
-  const {
-    sermon,
-    setPresenterNotes,
-    contextualNotes,
-    activeStageBlock,
-    stageBlocks,
-    activeIndex,
-  } = useSermon();
+  const { contextualNotes, activeStageBlock, stageBlocks, activeIndex } = useSermon();
 
   const nextBlock = stageBlocks[activeIndex + 1];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
-        <label className="text-[0.65rem] font-bold uppercase tracking-wider text-white/50">
-          Notas generales
-        </label>
-        <textarea
-          value={sermon.presenterNotes}
-          onChange={(e) => setPresenterNotes(e.target.value)}
-          rows={3}
-          placeholder="Recordatorios, anuncios, tiempos…"
-          className="mt-1.5 w-full resize-none rounded-xl border border-white/10 bg-void/80 px-3 py-2 text-sm leading-relaxed text-white/90 outline-none placeholder:text-white/30 focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
-        />
-      </div>
-
       {nextBlock ? (
         <div className="shrink-0 rounded-xl border border-accent/20 bg-accent/10 px-3 py-2">
           <p className="text-[0.65rem] font-bold uppercase tracking-wider text-accent-glow">
