@@ -134,12 +134,12 @@ function PredicarWorkspaceInner() {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[1600px] flex-1 min-h-0 gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_minmax(300px,42%)] lg:gap-6 lg:overflow-hidden safe-area-x safe-area-bottom">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 flex-col gap-4 px-4 py-4 sm:px-6 safe-area-x lg:grid lg:grid-cols-[1fr_minmax(300px,42%)] lg:gap-6 lg:overflow-hidden lg:safe-area-bottom">
         <section
           aria-label="Editor del mensaje"
           className={cn(
             "min-h-0 min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1",
-            tabletPanel !== "editor" ? "hidden lg:block" : "flex flex-1 flex-col overflow-y-auto overscroll-contain",
+            tabletPanel !== "editor" ? "hidden lg:block" : "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
           )}
         >
           <div className="mb-4">
@@ -157,8 +157,9 @@ function PredicarWorkspaceInner() {
 
         <aside
           className={cn(
-            "flex min-h-0 flex-col lg:max-h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:sticky lg:top-[calc(3.75rem+env(safe-area-inset-top))] lg:self-start",
-            tabletPanel !== "console" ? "hidden lg:flex" : "flex flex-1",
+            "flex min-h-0 flex-col overflow-hidden",
+            tabletPanel !== "console" ? "hidden lg:flex" : "min-h-0 flex-1",
+            "lg:max-h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:sticky lg:top-[calc(3.75rem+env(safe-area-inset-top))] lg:self-start",
           )}
         >
           <PresenterConsole onOpenBible={openBible} />
