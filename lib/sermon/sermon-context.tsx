@@ -156,8 +156,10 @@ export function SermonProvider({
   const sermonRef = useRef(sermon);
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
   const sermonPushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cloudSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const annotationsPushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const applyingRemoteRef = useRef(false);
+  const lastCloudSavedAtRef = useRef<string>("");
   const lastLocalPresentationMsRef = useRef(0);
   const lastLocalAnnotationsMsRef = useRef(0);
   const lastLocalTimerMsRef = useRef(0);
@@ -360,8 +362,29 @@ export function SermonProvider({
     if (uid && !applyingRemoteRef.current && shouldPushLocalSermon(updated)) {
       if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
       sermonPushTimerRef.current = setTimeout(() => {
-        void pushLiveSermon(uid, updated).catch(() => {});
+        void pushLiveSermon(uid, sermonRef.current).catch(() => {});
       }, 400);
+
+      if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+      cloudSaveTimerRef.current = setTimeout(() => {
+        const snapshot = sermonRef.current;
+        if (!shouldPushLocalSermon(snapshot)) return;
+        if (lastCloudSavedAtRef.current === snapshot.updatedAt) return;
+
+        void saveCloudSermon(uid, snapshot)
+          .then((cloudId) => {
+            lastCloudSavedAtRef.current = snapshot.updatedAt;
+            setSermon((prev) => {
+              if (prev.cloudId === cloudId) return prev;
+              const next = { ...prev, cloudId };
+              saveSermon(next, uid);
+              sermonRef.current = next;
+              return next;
+            });
+            void pushLiveSermon(uid, { ...sermonRef.current, cloudId }).catch(() => {});
+          })
+          .catch(() => {});
+      }, 2500);
     }
   }, []);
 
@@ -692,6 +715,7 @@ export function SermonProvider({
       unsubAnnotations?.();
       unsubTimer?.();
       if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
+      if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
       if (annotationsPushTimerRef.current) clearTimeout(annotationsPushTimerRef.current);
     };
   }, [hydrated, userId]);

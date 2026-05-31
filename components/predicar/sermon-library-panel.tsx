@@ -80,7 +80,7 @@ export function SermonLibraryPanel() {
       await pushLiveSermon(user.uid, localCopy);
       const cloudId = await saveCloudSermon(user.uid, localCopy);
       setCloudId(cloudId);
-      setStatus("Guardado en tu cuenta · sincronizado con tus dispositivos");
+      setStatus("Guardado en Firebase · visible en Mis mensajes");
       try {
         await refreshList();
       } catch {
@@ -139,9 +139,13 @@ export function SermonLibraryPanel() {
           onClick={() => requireAuth(() => void handleSave())}
           disabled={saving || !user}
           className="rounded-xl bg-accent/10 px-3 py-2 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:opacity-40"
-          title={!user ? "Inicia sesión para guardar" : undefined}
+          title={
+            !user
+              ? "Inicia sesión para guardar"
+              : "Fuerza un guardado inmediato en tu biblioteca de Firebase"
+          }
         >
-          {saving ? "Guardando…" : sermon.cloudId ? "Actualizar biblioteca" : "Guardar en cuenta"}
+          {saving ? "Guardando…" : "Guardar ahora"}
         </button>
         <button
           type="button"

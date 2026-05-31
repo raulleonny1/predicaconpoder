@@ -31,14 +31,13 @@ function parsePresentationUpdatedAt(data: Record<string, unknown>): number {
   return ts?.toDate?.()?.getTime?.() ?? 0;
 }
 
-/** Preferir remoto si tiene contenido real y el local está vacío/plantilla, o si es más reciente. */
+/** Preferir remoto solo si tiene contenido real. Nunca sobrescribir con un borrador vacío. */
 export function shouldApplyRemoteSermon(local: SermonDocument, remote: SermonDocument): boolean {
-  const localEmpty = !sermonHasMeaningfulContent(local);
+  const localHasContent = sermonHasMeaningfulContent(local);
   const remoteHasContent = sermonHasMeaningfulContent(remote);
 
-  if (localEmpty && remoteHasContent) return true;
-  if (remoteHasContent && !localEmpty && remote.updatedAt > local.updatedAt) return true;
-  if (!remoteHasContent && !localEmpty) return false;
+  if (!remoteHasContent) return false;
+  if (!localHasContent) return true;
   return remote.updatedAt > local.updatedAt;
 }
 

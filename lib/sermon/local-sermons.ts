@@ -28,12 +28,19 @@ function writeIndex(userId: string | null | undefined, index: SavedSermonMeta[])
 
 export function sermonHasMeaningfulContent(sermon: SermonDocument): boolean {
   const fresh = createDefaultSermon();
-  if (sermon.title.trim() && sermon.title.trim() !== fresh.title) return true;
   if (sermon.presenterNotes.trim()) return true;
-  if (sermon.blocks.length !== fresh.blocks.length) return true;
+  if (sermon.title.trim() && sermon.title.trim() !== fresh.title) return true;
+  if (!sermon.blocks.length) return false;
+
+  if (sermon.blocks.length > fresh.blocks.length) return true;
+
   return sermon.blocks.some((block, i) => {
     const base = fresh.blocks[i];
-    return !base || block.content !== base.content || block.type !== base.type;
+    if (!base) return true;
+    if (block.type !== base.type) return true;
+    if (block.scripture) return true;
+    if (block.label?.trim()) return true;
+    return (block.content?.trim() ?? "") !== (base.content?.trim() ?? "");
   });
 }
 
