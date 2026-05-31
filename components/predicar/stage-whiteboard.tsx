@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import type {
   AnnotationTool,
   DrawPath,
@@ -470,18 +470,25 @@ export function StageCanvasLayer({
       e.preventDefault();
     };
 
+    const touchOnOverlay = (clientX: number, clientY: number) => {
+      const hit = document.elementFromPoint(clientX, clientY);
+      return Boolean(hit?.closest("[data-pcp-overlay]"));
+    };
+
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      if (touchOnOverlay(touch.clientX, touch.clientY)) return;
       e.preventDefault();
       touchDrawingRef.current = true;
-      const touch = e.touches[0];
       beginStroke(touch.clientX, touch.clientY);
     };
 
     const onTouchMove = (e: TouchEvent) => {
       if (!touchDrawingRef.current || e.touches.length !== 1) return;
-      e.preventDefault();
       const touch = e.touches[0];
+      if (touchOnOverlay(touch.clientX, touch.clientY)) return;
+      e.preventDefault();
       moveStroke(touch.clientX, touch.clientY);
     };
 
@@ -489,7 +496,9 @@ export function StageCanvasLayer({
       if (!touchDrawingRef.current) return;
       touchDrawingRef.current = false;
       const touch = e.changedTouches[0];
-      if (touch) finishInteraction(touch.clientX, touch.clientY);
+      if (touch && !touchOnOverlay(touch.clientX, touch.clientY)) {
+        finishInteraction(touch.clientX, touch.clientY);
+      }
     };
 
     el.addEventListener("touchstart", onTouchStart, { passive: false });
@@ -558,6 +567,37 @@ export function StageCanvasLayer({
   );
 }
 
+function ToolbarButton({
+  onPress,
+  className,
+  children,
+  title,
+  "aria-label": ariaLabel,
+}: {
+  onPress: () => void;
+  className?: string;
+  children: ReactNode;
+  title?: string;
+  "aria-label"?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={ariaLabel}
+      className={className}
+      style={{ touchAction: "manipulation" }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        onPress();
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 type WhiteboardToolbarProps = {
   activeTool: AnnotationTool;
   activeColor: WhiteboardColor;
@@ -593,40 +633,38 @@ export function WhiteboardToolbar({
         compact ? "text-xs" : "text-sm",
       )}
       style={{ touchAction: "manipulation" }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="flex flex-wrap items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onToggleMode}
+        <ToolbarButton
+          onPress={onToggleMode}
           className={cn(
             "min-h-10 rounded-xl px-3 font-bold transition",
             whiteboardMode ? "bg-accent text-white" : "bg-white/10 text-white/70",
           )}
         >
           Pizarra {whiteboardMode ? "ON" : "OFF"}
-        </button>
+        </ToolbarButton>
         {whiteboardMode ? (
           <>
             {tools.map((t) => (
-              <button
+              <ToolbarButton
                 key={t.id}
-                type="button"
-                onClick={() => onToolChange(t.id)}
+                onPress={() => onToolChange(t.id)}
                 className={cn(
                   "min-h-10 rounded-xl px-2.5 font-semibold transition sm:px-3",
                   activeTool === t.id ? "bg-white text-void" : "bg-white/10 text-white/80",
                 )}
               >
                 {t.label}
-              </button>
+              </ToolbarButton>
             ))}
-            <button
-              type="button"
-              onClick={onClearSlide}
+            <ToolbarButton
+              onPress={onClearSlide}
               className="min-h-10 rounded-xl bg-white/10 px-3 font-semibold text-white/60 hover:bg-red-500/20 hover:text-red-200"
             >
               Limpiar
-            </button>
+            </ToolbarButton>
           </>
         ) : null}
       </div>
@@ -634,17 +672,22 @@ export function WhiteboardToolbar({
         <div className="mt-2 flex flex-wrap items-center gap-2 px-1">
           <span className="text-xs text-white/45">Color</span>
           {WHITEBOARD_COLORS.map((c) => (
-            <button
+            <ToolbarButton
               key={c.id}
-              type="button"
               title={c.label}
-              onClick={() => onColorChange(c.id)}
+              onPress={() => onColorChange(c.id)}
               className={cn(
-                "h-8 w-8 rounded-full border-2 transition",
+                "h-8 w-8 rounded-full border-2 p-0 transition",
                 activeColor === c.id ? "border-white scale-110" : "border-white/25",
               )}
-              style={{ backgroundColor: c.hex }}
-            />
+            >
+              <span className="sr-only">{c.label}</span>
+              <span
+                className="block h-full w-full rounded-full"
+                style={{ backgroundColor: c.hex }}
+                aria-hidden
+              />
+            </ToolbarButton>
           ))}
         </div>
       ) : null}

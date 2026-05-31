@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StageViewer } from "@/components/predicar/stage-viewer";
-import { WhiteboardToolbar } from "@/components/predicar/stage-whiteboard";
+import { FloatingWhiteboardToolbar } from "@/components/predicar/floating-whiteboard-toolbar";
 import { VisorTimerBadge } from "@/components/predicar/visor-timer-badge";
 import { useSermon } from "@/lib/sermon/sermon-context";
 
@@ -117,7 +117,7 @@ function VisorControls() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden overscroll-none bg-void touch-none">
+    <div className="fixed inset-0 overflow-hidden overscroll-none bg-void">
       <StageViewer whiteboard />
 
       {!whiteboardMode ? (
@@ -140,6 +140,7 @@ function VisorControls() {
 
       <Link
         href="/predicar"
+        data-pcp-overlay
         onClick={() => {
           if (document.fullscreenElement) void document.exitFullscreen();
         }}
@@ -148,19 +149,18 @@ function VisorControls() {
         ← Volver
       </Link>
 
-      <div className="fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-50 w-[min(100%,40rem)] -translate-x-1/2 px-4">
-        <WhiteboardToolbar
-          activeTool={annotationTool}
-          activeColor={annotationColor}
-          whiteboardMode={whiteboardMode}
-          onToolChange={setAnnotationTool}
-          onColorChange={setAnnotationColor}
-          onToggleMode={() => setWhiteboardMode(!whiteboardMode)}
-          onClearSlide={() => {
-            if (activeStageBlock) clearBlockAnnotations(activeStageBlock.id);
-          }}
-        />
-      </div>
+      <FloatingWhiteboardToolbar
+        bottomReserve={120}
+        activeTool={annotationTool}
+        activeColor={annotationColor}
+        whiteboardMode={whiteboardMode}
+        onToolChange={setAnnotationTool}
+        onColorChange={setAnnotationColor}
+        onToggleMode={() => setWhiteboardMode(!whiteboardMode)}
+        onClearSlide={() => {
+          if (activeStageBlock) clearBlockAnnotations(activeStageBlock.id);
+        }}
+      />
 
       <VisorTimerBadge />
 
@@ -169,7 +169,8 @@ function VisorControls() {
           <p className="font-heading text-sm font-bold">Pizarra en el visor</p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-white/80">
             <li>
-              <strong className="text-white">✏️ Lápiz</strong>: dibuja encima del texto con el dedo.
+              <strong className="text-white">Burbuja ✏️</strong>: arrástrala a cualquier borde; tócala para abrir herramientas
+              o pulsa <strong className="text-white">−</strong> para minimizar.
             </li>
             <li>
               <strong className="text-white">🖍 Resaltar</strong>: trazo grueso para encerrar o subrayar.
@@ -197,7 +198,10 @@ function VisorControls() {
         </div>
       ) : null}
 
-      <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2 px-4">
+      <div
+        data-pcp-overlay
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2 px-4"
+      >
         <div className="flex items-center gap-2">
           <button
             type="button"
