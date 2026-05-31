@@ -50,7 +50,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
   }, [goNext, goPrev, toggleBlackScreen]);
 
   return (
-    <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
+    <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3 sm:px-4">
         <div className="min-w-0">
           <p className="truncate font-heading text-sm font-bold text-white">{sermon.title}</p>
@@ -76,7 +76,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
         <PresenterTimer />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[calc(13rem+env(safe-area-inset-bottom))] lg:pb-0 [-webkit-overflow-scrolling:touch]">
+      <div className="presenter-console-body min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
         <div className="relative isolate max-h-40 min-h-[7.5rem] shrink-0 overflow-hidden border-b border-white/10 bg-void">
           <div className="h-full max-h-40 overflow-y-auto overscroll-contain">
             <StageViewer compact whiteboard />
@@ -108,7 +108,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 space-y-3 border-t border-white/10 bg-void p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] safe-area-bottom safe-area-x lg:relative lg:inset-auto lg:z-auto lg:shrink-0 lg:shadow-none">
+      <div className="presenter-console-dock z-30 space-y-3 border-t border-white/10 bg-void p-3 safe-area-bottom safe-area-x">
         <div className="flex gap-2">
           <button
             type="button"

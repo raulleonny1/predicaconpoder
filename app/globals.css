@@ -51,6 +51,32 @@ input[type="checkbox"] {
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
+/* iPad / tablet: barra Anterior·Siguiente·diapositivas siempre visible (vertical y horizontal) */
+@media (max-width: 1279px) {
+  .presenter-console-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    box-shadow: 0 -8px 32px rgb(0 0 0 / 50%);
+  }
+
+  .presenter-console-body {
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1280px) {
+  .presenter-console-dock {
+    position: relative;
+  }
+
+  .presenter-console-body {
+    padding-bottom: 0;
+  }
+}
+
 @media (pointer: coarse) {
   .touch-target {
     min-height: 2.75rem;

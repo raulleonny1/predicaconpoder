@@ -98,7 +98,7 @@ function PredicarWorkspaceInner() {
 
       {/* iPad / tablet vertical: alternar editor y consola */}
       <div
-        className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 border-b border-border-subtle bg-surface/95 backdrop-blur-md lg:hidden safe-area-x"
+        className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 border-b border-border-subtle bg-surface/95 backdrop-blur-md xl:hidden safe-area-x"
         role="tablist"
         aria-label="Sección de predicación"
       >
@@ -134,12 +134,12 @@ function PredicarWorkspaceInner() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 flex-col gap-4 px-4 py-4 sm:px-6 safe-area-x lg:grid lg:grid-cols-[1fr_minmax(300px,42%)] lg:gap-6 lg:overflow-hidden lg:safe-area-bottom">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 flex-col gap-4 px-4 py-4 sm:px-6 safe-area-x xl:grid xl:grid-cols-[1fr_minmax(300px,42%)] xl:gap-6 xl:overflow-hidden xl:safe-area-bottom">
         <section
           aria-label="Editor del mensaje"
           className={cn(
-            "min-h-0 min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1",
-            tabletPanel !== "editor" ? "hidden lg:block" : "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
+            "min-h-0 min-w-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1",
+            tabletPanel !== "editor" ? "hidden xl:block" : "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
           )}
         >
           <div className="mb-4">
@@ -158,8 +158,8 @@ function PredicarWorkspaceInner() {
         <aside
           className={cn(
             "flex min-h-0 flex-col overflow-hidden",
-            tabletPanel !== "console" ? "hidden lg:flex" : "min-h-0 flex-1",
-            "lg:max-h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:sticky lg:top-[calc(3.75rem+env(safe-area-inset-top))] lg:self-start",
+            tabletPanel !== "console" ? "hidden xl:flex" : "min-h-0 flex-1",
+            "xl:h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] xl:max-h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] xl:sticky xl:top-[calc(3.75rem+env(safe-area-inset-top))] xl:self-start",
           )}
         >
           <PresenterConsole onOpenBible={openBible} />
