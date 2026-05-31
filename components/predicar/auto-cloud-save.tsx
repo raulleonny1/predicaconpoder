@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { saveCloudSermon } from "@/lib/sermon/cloud-sermons";
 import { useSermon } from "@/lib/sermon/sermon-context";
 
-/** Guarda automáticamente en la nube cada ~12 s si hay sesión y cloudId */
+/** Respaldo en biblioteca de nube cada ~12 s si hay cloudId (la sync en vivo usa Firestore live/) */
 export function AutoCloudSave() {
   const { user } = useAuth();
   const { sermon, setCloudId } = useSermon();

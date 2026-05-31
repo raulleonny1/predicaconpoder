@@ -37,6 +37,14 @@ import {
 } from "@/lib/sermon/local-sermons";
 import { saveCloudSermon } from "@/lib/sermon/cloud-sermons";
 import {
+  pushLiveAnnotations,
+  pushLivePresentation,
+  pushLiveSermon,
+  subscribeLiveAnnotations,
+  subscribeLivePresentation,
+  subscribeLiveSermon,
+} from "@/lib/sermon/live-sync";
+import {
   createBlockId,
   createDefaultSermon,
   type PresentationState,
@@ -143,6 +151,11 @@ export function SermonProvider({
   const userIdRef = useRef(userId);
   const sermonRef = useRef(sermon);
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  const sermonPushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const annotationsPushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const applyingRemoteRef = useRef(false);
+  const lastLocalPresentationMsRef = useRef(0);
+  const lastLocalAnnotationsMsRef = useRef(0);
 
   userIdRef.current = userId;
   sermonRef.current = sermon;
@@ -209,6 +222,17 @@ export function SermonProvider({
       setAnnotations((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         saveAnnotations(next, userIdRef.current);
+
+        const uid = userIdRef.current;
+        if (uid && !applyingRemoteRef.current) {
+          const stamp = Date.now();
+          lastLocalAnnotationsMsRef.current = stamp;
+          if (annotationsPushTimerRef.current) clearTimeout(annotationsPushTimerRef.current);
+          annotationsPushTimerRef.current = setTimeout(() => {
+            void pushLiveAnnotations(uid, next, stamp).catch(() => {});
+          }, 350);
+        }
+
         return next;
       });
     },
@@ -284,14 +308,19 @@ export function SermonProvider({
 
   const persistPresentation = useCallback(
     (index: number, black: boolean) => {
-      savePresentation(
-        {
-          sermonId: sermon.id,
-          activeIndex: index,
-          blackScreen: black,
-        },
-        userIdRef.current,
-      );
+      const state: PresentationState = {
+        sermonId: sermon.id,
+        activeIndex: index,
+        blackScreen: black,
+      };
+      savePresentation(state, userIdRef.current);
+
+      const uid = userIdRef.current;
+      if (uid && !applyingRemoteRef.current) {
+        const stamp = Date.now();
+        lastLocalPresentationMsRef.current = stamp;
+        void pushLivePresentation(uid, state, stamp).catch(() => {});
+      }
     },
     [sermon.id],
   );
@@ -321,6 +350,14 @@ export function SermonProvider({
     const updated = { ...next, updatedAt: new Date().toISOString() };
     setSermon(updated);
     saveSermon(updated, userIdRef.current);
+
+    const uid = userIdRef.current;
+    if (uid && !applyingRemoteRef.current) {
+      if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
+      sermonPushTimerRef.current = setTimeout(() => {
+        void pushLiveSermon(uid, updated).catch(() => {});
+      }, 400);
+    }
   }, []);
 
   const setTitle = useCallback(
@@ -577,6 +614,62 @@ export function SermonProvider({
       channel.removeEventListener("message", onAnnotations);
     };
   }, [sermon.id]);
+
+  /* Sincronización en vivo entre dispositivos (PC ↔ iPad) vía Firestore */
+  useEffect(() => {
+    if (!hydrated || !userId) return;
+
+    const unsubSermon = subscribeLiveSermon(userId, (remote) => {
+      if (!remote) {
+        void pushLiveSermon(userId, sermonRef.current).catch(() => {});
+        return;
+      }
+      if (remote.updatedAt <= sermonRef.current.updatedAt) {
+        if (remote.updatedAt < sermonRef.current.updatedAt) {
+          void pushLiveSermon(userId, sermonRef.current).catch(() => {});
+        }
+        return;
+      }
+
+      const prevId = sermonRef.current.id;
+      applyingRemoteRef.current = true;
+      setSermon(remote);
+      saveSermon(remote, userId);
+      if (remote.id !== prevId) {
+        setAnnotations(createDefaultAnnotationsState(remote.id));
+      }
+      applyingRemoteRef.current = false;
+    });
+
+    const unsubPresentation = subscribeLivePresentation(userId, (remote, updatedAtMs) => {
+      if (!remote || updatedAtMs <= lastLocalPresentationMsRef.current) return;
+      if (remote.sermonId !== sermonRef.current.id) return;
+
+      applyingRemoteRef.current = true;
+      setActiveIndexState(remote.activeIndex);
+      setBlackScreen(remote.blackScreen);
+      savePresentation(remote, userId);
+      applyingRemoteRef.current = false;
+    });
+
+    const unsubAnnotations = subscribeLiveAnnotations(userId, (remote, updatedAtMs) => {
+      if (!remote || updatedAtMs <= lastLocalAnnotationsMsRef.current) return;
+      if (remote.sermonId !== sermonRef.current.id) return;
+
+      applyingRemoteRef.current = true;
+      setAnnotations(remote);
+      saveAnnotations(remote, userId);
+      applyingRemoteRef.current = false;
+    });
+
+    return () => {
+      unsubSermon?.();
+      unsubPresentation?.();
+      unsubAnnotations?.();
+      if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
+      if (annotationsPushTimerRef.current) clearTimeout(annotationsPushTimerRef.current);
+    };
+  }, [hydrated, userId]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
