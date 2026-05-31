@@ -157,8 +157,8 @@ function PredicarWorkspaceInner() {
 
         <aside
           className={cn(
-            "min-h-[min(100dvh-10rem,720px)] lg:self-start",
-            tabletPanel !== "console" ? "hidden lg:block" : "flex min-h-0 flex-1 flex-col",
+            "flex min-h-0 flex-col lg:max-h-[calc(100dvh-5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:sticky lg:top-[calc(3.75rem+env(safe-area-inset-top))] lg:self-start",
+            tabletPanel !== "console" ? "hidden lg:flex" : "flex flex-1",
           )}
         >
           <PresenterConsole onOpenBible={openBible} />

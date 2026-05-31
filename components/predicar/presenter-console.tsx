@@ -50,7 +50,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
   }, [goNext, goPrev, toggleBlackScreen]);
 
   return (
-    <div className="flex h-full min-h-[min(100dvh-8rem,900px)] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
+    <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-void shadow-xl">
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3 sm:px-4">
         <div className="min-w-0">
           <p className="truncate font-heading text-sm font-bold text-white">{sermon.title}</p>
@@ -71,11 +71,11 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(120px,26%)_auto_auto_minmax(0,1fr)]">
-        <div className="relative min-h-0 overflow-hidden border-b border-white/10">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="relative h-[min(280px,32vh)] min-h-[200px] shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain border-b border-white/10 [-webkit-overflow-scrolling:touch]">
           <StageViewer compact whiteboard />
           {blackScreen ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black text-xs text-white/40">
+            <div className="pointer-events-none absolute inset-0 z-10 flex min-h-[200px] items-center justify-center bg-black text-xs text-white/40">
               Pantalla en negro (B)
             </div>
           ) : null}
@@ -100,7 +100,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
           <PresenterTimer />
         </div>
 
-        <div className="flex min-h-0 flex-col p-3 pt-0">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 pt-0">
           <PresenterNotesPanel />
         </div>
       </div>
