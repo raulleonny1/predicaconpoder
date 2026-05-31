@@ -82,6 +82,7 @@ export function loadTimer(): TimerState {
 export function saveTimer(state: TimerState): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TIMER_KEY, JSON.stringify(state));
+  getSyncChannel()?.postMessage({ type: "timer", payload: state });
 }
 
 export function getSyncChannel(): BroadcastChannel | null {

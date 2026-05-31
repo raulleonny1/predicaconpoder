@@ -10,6 +10,7 @@ import {
   loadCloudSermon,
   saveCloudSermon,
 } from "@/lib/sermon/cloud-sermons";
+import { pushLiveSermon } from "@/lib/sermon/live-sync";
 import { listLocalSermons, sermonHasMeaningfulContent } from "@/lib/sermon/local-sermons";
 import { useSermon } from "@/lib/sermon/sermon-context";
 import type { CloudSermonMeta } from "@/lib/sermon/types";
@@ -74,15 +75,24 @@ export function SermonLibraryPanel() {
     if (!user) return;
     setSaving(true);
     setStatus(null);
+    const localCopy = saveToLibrary();
     try {
-      const localCopy = saveToLibrary();
+      await pushLiveSermon(user.uid, localCopy);
       const cloudId = await saveCloudSermon(user.uid, localCopy);
       setCloudId(cloudId);
-      setStatus(`Guardado en tu cuenta`);
-      await refreshList();
+      setStatus("Guardado en tu cuenta · sincronizado con tus dispositivos");
+      try {
+        await refreshList();
+      } catch {
+        /* la lista puede fallar sin índice; el guardado ya funcionó */
+      }
     } catch {
-      saveToLibrary();
-      setStatus("Guardado solo en este dispositivo (revisa Firestore).");
+      try {
+        await pushLiveSermon(user.uid, localCopy);
+        setStatus("Sincronizado en vivo. No se pudo actualizar la biblioteca.");
+      } catch {
+        setStatus("Guardado solo en este dispositivo. Revisa tu conexión o Firestore.");
+      }
     } finally {
       setSaving(false);
     }
@@ -131,7 +141,7 @@ export function SermonLibraryPanel() {
           className="rounded-xl bg-accent/10 px-3 py-2 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:opacity-40"
           title={!user ? "Inicia sesión para guardar" : undefined}
         >
-          {saving ? "Guardando…" : sermon.cloudId ? "Actualizar" : "Guardar"}
+          {saving ? "Guardando…" : sermon.cloudId ? "Actualizar biblioteca" : "Guardar en cuenta"}
         </button>
         <button
           type="button"

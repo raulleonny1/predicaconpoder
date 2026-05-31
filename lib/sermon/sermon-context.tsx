@@ -40,11 +40,13 @@ import {
   pushLiveAnnotations,
   pushLivePresentation,
   pushLiveSermon,
+  pushLiveTimer,
   shouldApplyRemoteSermon,
   shouldPushLocalSermon,
   subscribeLiveAnnotations,
   subscribeLivePresentation,
   subscribeLiveSermon,
+  subscribeLiveTimer,
 } from "@/lib/sermon/live-sync";
 import {
   createBlockId,
@@ -158,6 +160,7 @@ export function SermonProvider({
   const applyingRemoteRef = useRef(false);
   const lastLocalPresentationMsRef = useRef(0);
   const lastLocalAnnotationsMsRef = useRef(0);
+  const lastLocalTimerMsRef = useRef(0);
 
   userIdRef.current = userId;
   sermonRef.current = sermon;
@@ -562,6 +565,13 @@ export function SermonProvider({
   const persistTimer = useCallback((next: TimerState) => {
     setTimer(next);
     saveTimer(next);
+
+    const uid = userIdRef.current;
+    if (uid && !applyingRemoteRef.current) {
+      const stamp = Date.now();
+      lastLocalTimerMsRef.current = stamp;
+      void pushLiveTimer(uid, next, stamp).catch(() => {});
+    }
   }, []);
 
   const startTimer = useCallback(() => {
@@ -609,11 +619,17 @@ export function SermonProvider({
       if (payload.sermonId !== sermon.id) return;
       setAnnotations(payload);
     };
+    const onTimer = (ev: MessageEvent) => {
+      if (ev.data?.type !== "timer") return;
+      setTimer(ev.data.payload as TimerState);
+    };
     channel.addEventListener("message", onMessage);
     channel.addEventListener("message", onAnnotations);
+    channel.addEventListener("message", onTimer);
     return () => {
       channel.removeEventListener("message", onMessage);
       channel.removeEventListener("message", onAnnotations);
+      channel.removeEventListener("message", onTimer);
     };
   }, [sermon.id]);
 
@@ -661,10 +677,20 @@ export function SermonProvider({
       applyingRemoteRef.current = false;
     });
 
+    const unsubTimer = subscribeLiveTimer(userId, (remote, updatedAtMs) => {
+      if (!remote || updatedAtMs <= lastLocalTimerMsRef.current) return;
+
+      applyingRemoteRef.current = true;
+      setTimer(remote);
+      saveTimer(remote);
+      applyingRemoteRef.current = false;
+    });
+
     return () => {
       unsubSermon?.();
       unsubPresentation?.();
       unsubAnnotations?.();
+      unsubTimer?.();
       if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
       if (annotationsPushTimerRef.current) clearTimeout(annotationsPushTimerRef.current);
     };
@@ -697,6 +723,13 @@ export function SermonProvider({
         try {
           const ann = JSON.parse(e.newValue) as StageAnnotationsState;
           if (ann.sermonId === sermon.id) setAnnotations(ann);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (e.key === "pcp:timer" && e.newValue) {
+        try {
+          setTimer(JSON.parse(e.newValue) as TimerState);
         } catch {
           /* ignore */
         }

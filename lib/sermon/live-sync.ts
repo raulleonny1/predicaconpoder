@@ -9,7 +9,7 @@ import {
 import { getClientFirestore } from "@/lib/firebase-client";
 import { sermonHasMeaningfulContent } from "@/lib/sermon/local-sermons";
 import type { StageAnnotationsState } from "@/lib/sermon/stage-annotations";
-import type { PresentationState, SermonDocument } from "@/lib/sermon/types";
+import type { PresentationState, SermonDocument, TimerState } from "@/lib/sermon/types";
 
 function liveDocRef(uid: string, name: string) {
   const db = getClientFirestore();
@@ -172,6 +172,57 @@ export async function pushLiveAnnotations(
   clientUpdatedAtMs: number,
 ): Promise<void> {
   const ref = liveDocRef(uid, "annotations");
+  if (!ref) return;
+
+  await setDoc(
+    ref,
+    {
+      payload: state,
+      clientUpdatedAt: clientUpdatedAtMs,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+function parseTimerPayload(data: Record<string, unknown>): TimerState {
+  const payload = data.payload as TimerState | undefined;
+  return {
+    elapsedMs: typeof payload?.elapsedMs === "number" ? payload.elapsedMs : 0,
+    running: Boolean(payload?.running),
+    startedAt: typeof payload?.startedAt === "number" ? payload.startedAt : null,
+    targetMinutes:
+      typeof payload?.targetMinutes === "number" ? payload.targetMinutes : null,
+  };
+}
+
+export function subscribeLiveTimer(
+  uid: string,
+  onChange: (state: TimerState | null, updatedAtMs: number) => void,
+): Unsubscribe | null {
+  const ref = liveDocRef(uid, "timer");
+  if (!ref) return null;
+
+  return onSnapshot(
+    ref,
+    (snap) => {
+      if (!snap.exists()) {
+        onChange(null, 0);
+        return;
+      }
+      const data = snap.data() as Record<string, unknown>;
+      onChange(parseTimerPayload(data), parsePresentationUpdatedAt(data));
+    },
+    () => onChange(null, 0),
+  );
+}
+
+export async function pushLiveTimer(
+  uid: string,
+  state: TimerState,
+  clientUpdatedAtMs: number,
+): Promise<void> {
+  const ref = liveDocRef(uid, "timer");
   if (!ref) return;
 
   await setDoc(
