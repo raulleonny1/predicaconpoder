@@ -90,7 +90,7 @@ export function StageViewer({
       <div
         className={cn(
           "flex items-center justify-center",
-          compact ? "min-h-[200px] w-full" : "fixed inset-0",
+          compact ? "min-h-[7.5rem] w-full" : "fixed inset-0",
         )}
       >
         <span className="text-white/40">Cargando…</span>
@@ -100,7 +100,7 @@ export function StageViewer({
 
   if (blackScreen) {
     return (
-      <div className={cn("bg-black", compact ? "min-h-[200px] w-full" : "fixed inset-0")} />
+      <div className={cn("bg-black", compact ? "min-h-[7.5rem] w-full" : "fixed inset-0")} />
     );
   }
 
@@ -109,7 +109,7 @@ export function StageViewer({
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-4 text-center text-white/50",
-          compact ? "min-h-[200px] w-full px-6" : "fixed inset-0 px-12",
+          compact ? "min-h-[7.5rem] w-full px-6" : "fixed inset-0 px-12",
         )}
       >
         <p className="font-heading text-2xl">Sin diapositivas en pantalla</p>
@@ -124,7 +124,7 @@ export function StageViewer({
         className={cn(
           "stage-canvas relative flex flex-col justify-center bg-void text-white",
           compact
-            ? "min-h-[200px] w-full px-4 py-4"
+            ? "min-h-[7.5rem] w-full px-4 py-3"
             : "fixed inset-0 overflow-hidden overscroll-none touch-none px-[clamp(2rem,6vw,8rem)] py-[clamp(2rem,5vh,4rem)]",
           pizarra && "select-none",
         )}

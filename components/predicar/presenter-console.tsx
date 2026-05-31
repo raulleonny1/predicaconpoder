@@ -71,17 +71,24 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="relative h-[min(280px,32vh)] min-h-[200px] shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain border-b border-white/10 [-webkit-overflow-scrolling:touch]">
-          <StageViewer compact whiteboard />
+      {/* Cronómetro primero: siempre visible, no lo tapa la vista previa */}
+      <div className="relative z-20 shrink-0 border-b border-white/10 bg-void p-3">
+        <PresenterTimer />
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+        <div className="relative isolate max-h-40 min-h-[7.5rem] shrink-0 overflow-hidden border-b border-white/10 bg-void">
+          <div className="h-full max-h-40 overflow-y-auto overscroll-contain">
+            <StageViewer compact whiteboard />
+          </div>
           {blackScreen ? (
-            <div className="pointer-events-none absolute inset-0 z-10 flex min-h-[200px] items-center justify-center bg-black text-xs text-white/40">
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black text-xs text-white/40">
               Pantalla en negro (B)
             </div>
           ) : null}
         </div>
 
-        <div className="shrink-0 border-b border-white/10 p-3">
+        <div className="relative z-10 shrink-0 border-b border-white/10 bg-void p-3">
           <WhiteboardToolbar
             compact
             activeTool={annotationTool}
@@ -96,11 +103,7 @@ export function PresenterConsole({ onOpenBible }: { onOpenBible: () => void }) {
           />
         </div>
 
-        <div className="shrink-0 border-b border-white/10 p-3">
-          <PresenterTimer />
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 pt-0">
+        <div className="flex min-h-[8rem] flex-1 flex-col p-3 pt-0">
           <PresenterNotesPanel />
         </div>
       </div>
