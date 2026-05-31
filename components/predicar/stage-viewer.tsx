@@ -76,6 +76,8 @@ export function StageViewer({
     getBlockAnnotations,
     addDrawPath,
     removeDrawPaths,
+    goNext,
+    goPrev,
   } = useSermon();
 
   const block = stageBlocks[activeIndex];
@@ -163,6 +165,8 @@ export function StageViewer({
           fullscreen
           onAddPath={(path) => addDrawPath(block.id, path)}
           onRemovePaths={(ids) => removeDrawPaths(block.id, ids)}
+          onSwipePrev={goPrev}
+          onSwipeNext={goNext}
         />
       ) : null}
     </>

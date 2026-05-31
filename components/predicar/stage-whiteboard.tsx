@@ -113,6 +113,29 @@ function normalizePoints(points: number[]): number[] {
   return points;
 }
 
+/** Longitud del trazo en coordenadas normalizadas (0–1) */
+function pathStrokeLengthNorm(points: number[]): number {
+  let len = 0;
+  for (let i = 2; i < points.length; i += 2) {
+    const dx = points[i]! - points[i - 2]!;
+    const dy = points[i + 1]! - points[i - 1]!;
+    len += Math.hypot(dx, dy);
+  }
+  return len;
+}
+
+const HOLD_NAV_MS = 1000;
+const HOLD_MOVE_PX = 28;
+/** Borde izquierdo/derecho: mantener ~1 s para cambiar diapositiva */
+const HOLD_EDGE_RATIO = 0.22;
+
+function getHoldNavZone(clientX: number, rect: DOMRect): "prev" | "next" | null {
+  const ratio = (clientX - rect.left) / rect.width;
+  if (ratio < HOLD_EDGE_RATIO) return "prev";
+  if (ratio > 1 - HOLD_EDGE_RATIO) return "next";
+  return null;
+}
+
 type StageCanvasLayerProps = {
   paths: DrawPath[];
   tool: AnnotationTool;
@@ -121,6 +144,8 @@ type StageCanvasLayerProps = {
   fullscreen?: boolean;
   onAddPath: (path: DrawPath) => void;
   onRemovePaths: (ids: string[]) => void;
+  onSwipePrev?: () => void;
+  onSwipeNext?: () => void;
 };
 
 export function StageCanvasLayer({
@@ -131,6 +156,8 @@ export function StageCanvasLayer({
   fullscreen,
   onAddPath,
   onRemovePaths,
+  onSwipePrev,
+  onSwipeNext,
 }: StageCanvasLayerProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -141,6 +168,13 @@ export function StageCanvasLayer({
   const colorRef = useRef(color);
   const pathsRef = useRef(paths);
   const touchDrawingRef = useRef(false);
+  const gestureStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const pendingCheckRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeRef = useRef({ onSwipePrev, onSwipeNext });
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdNavFiredRef = useRef(false);
+  const lastClientRef = useRef({ x: 0, y: 0 });
+  swipeRef.current = { onSwipePrev, onSwipeNext };
   toolRef.current = tool;
   colorRef.current = color;
   pathsRef.current = paths;
@@ -221,21 +255,119 @@ export function StageCanvasLayer({
     [norm, onRemovePaths],
   );
 
+  const cancelStroke = useCallback(() => {
+    drawingRef.current = false;
+    livePointsRef.current = [];
+    pendingCheckRef.current = null;
+    paint();
+  }, [paint]);
+
+  const clearHoldTimer = useCallback(() => {
+    if (holdTimerRef.current !== null) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  }, []);
+
+  const armHoldNav = useCallback(
+    (clientX: number, clientY: number) => {
+      clearHoldTimer();
+      holdNavFiredRef.current = false;
+
+      const { onSwipePrev, onSwipeNext } = swipeRef.current;
+      const rect = wrapRef.current?.getBoundingClientRect();
+      if (!onSwipePrev || !onSwipeNext || !rect?.width) return;
+
+      const zone = getHoldNavZone(clientX, rect);
+      if (!zone) return;
+
+      lastClientRef.current = { x: clientX, y: clientY };
+
+      holdTimerRef.current = setTimeout(() => {
+        holdTimerRef.current = null;
+        const start = gestureStartRef.current;
+        if (!start || holdNavFiredRef.current) return;
+
+        const moved = Math.hypot(
+          lastClientRef.current.x - start.x,
+          lastClientRef.current.y - start.y,
+        );
+        if (moved > HOLD_MOVE_PX) return;
+
+        holdNavFiredRef.current = true;
+        cancelStroke();
+        gestureStartRef.current = null;
+        if (zone === "prev") onSwipePrev();
+        else onSwipeNext();
+      }, HOLD_NAV_MS);
+    },
+    [cancelStroke, clearHoldTimer],
+  );
+
+  const trackHoldMovement = useCallback(
+    (clientX: number, clientY: number) => {
+      lastClientRef.current = { x: clientX, y: clientY };
+      const start = gestureStartRef.current;
+      if (!start || holdTimerRef.current === null) return;
+      if (Math.hypot(clientX - start.x, clientY - start.y) > HOLD_MOVE_PX) {
+        clearHoldTimer();
+      }
+    },
+    [clearHoldTimer],
+  );
+
+  const trySwipeNav = useCallback((clientX: number, clientY: number): boolean => {
+    const { onSwipePrev, onSwipeNext } = swipeRef.current;
+    if (!onSwipePrev || !onSwipeNext) return false;
+
+    const start = gestureStartRef.current;
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!start || !rect?.width) return false;
+
+    const dx = clientX - start.x;
+    const dy = clientY - start.y;
+    const dt = Date.now() - start.t;
+    const minSwipe = Math.max(48, rect.width * 0.08);
+
+    if (dt > 700 || Math.abs(dx) < minSwipe) return false;
+    if (Math.abs(dy) > Math.abs(dx) * 0.65) return false;
+
+    const currentTool = toolRef.current;
+    const strokeLen = pathStrokeLengthNorm(livePointsRef.current);
+
+    if (currentTool === "pen" || currentTool === "highlighter") {
+      if (strokeLen > 0.045 || livePointsRef.current.length > 10) return false;
+    }
+    if (currentTool === "eraser" && strokeLen > 0.025) return false;
+
+    cancelStroke();
+    gestureStartRef.current = null;
+    if (dx < 0) onSwipeNext();
+    else onSwipePrev();
+    return true;
+  }, [cancelStroke]);
+
   const beginStroke = useCallback(
     (clientX: number, clientY: number) => {
       if (!enabled) return;
+
+      gestureStartRef.current = { x: clientX, y: clientY, t: Date.now() };
+      lastClientRef.current = { x: clientX, y: clientY };
+      armHoldNav(clientX, clientY);
 
       const currentTool = toolRef.current;
 
       if (currentTool === "check") {
         const { x, y } = norm(clientX, clientY);
-        onAddPath({ id: createPathId(), tool: "check", color: colorRef.current, points: [x, y] });
-        paint();
+        pendingCheckRef.current = { x, y };
+        drawingRef.current = true;
+        livePointsRef.current = [x, y];
         return;
       }
 
       if (currentTool === "eraser") {
         drawingRef.current = true;
+        livePointsRef.current = [];
         hitErase(clientX, clientY);
         return;
       }
@@ -246,15 +378,24 @@ export function StageCanvasLayer({
       livePointsRef.current = [x, y];
       paint();
     },
-    [enabled, hitErase, norm, onAddPath, paint],
+    [enabled, armHoldNav, hitErase, norm, paint],
   );
 
   const moveStroke = useCallback(
     (clientX: number, clientY: number) => {
+      trackHoldMovement(clientX, clientY);
       if (!drawingRef.current) return;
 
       if (toolRef.current === "eraser") {
         hitErase(clientX, clientY);
+        const { x, y } = norm(clientX, clientY);
+        livePointsRef.current = [...livePointsRef.current, x, y];
+        return;
+      }
+
+      if (toolRef.current === "check") {
+        const { x, y } = norm(clientX, clientY);
+        livePointsRef.current = [...livePointsRef.current, x, y];
         return;
       }
 
@@ -266,13 +407,25 @@ export function StageCanvasLayer({
       livePointsRef.current = [...pts, x, y];
       paint();
     },
-    [hitErase, norm, paint],
+    [hitErase, norm, paint, trackHoldMovement],
   );
 
-  const endStroke = useCallback(() => {
+  const commitStroke = useCallback(() => {
     if (!drawingRef.current) return;
 
-    if (toolRef.current !== "eraser" && livePointsRef.current.length >= 2) {
+    if (toolRef.current === "check" && pendingCheckRef.current) {
+      const { x, y } = pendingCheckRef.current;
+      onAddPath({ id: createPathId(), tool: "check", color: colorRef.current, points: [x, y] });
+      cancelStroke();
+      return;
+    }
+
+    if (toolRef.current === "eraser") {
+      cancelStroke();
+      return;
+    }
+
+    if (livePointsRef.current.length >= 2) {
       onAddPath({
         id: createPathId(),
         tool: liveToolRef.current,
@@ -281,10 +434,31 @@ export function StageCanvasLayer({
       });
     }
 
-    drawingRef.current = false;
-    livePointsRef.current = [];
-    paint();
-  }, [onAddPath, paint]);
+    cancelStroke();
+  }, [cancelStroke, onAddPath]);
+
+  const finishInteraction = useCallback(
+    (clientX: number, clientY: number) => {
+      clearHoldTimer();
+
+      if (holdNavFiredRef.current) {
+        holdNavFiredRef.current = false;
+        gestureStartRef.current = null;
+        cancelStroke();
+        return;
+      }
+
+      if (!drawingRef.current && !pendingCheckRef.current) return;
+
+      if (trySwipeNav(clientX, clientY)) return;
+
+      commitStroke();
+      gestureStartRef.current = null;
+    },
+    [clearHoldTimer, cancelStroke, commitStroke, trySwipeNav],
+  );
+
+  useEffect(() => () => clearHoldTimer(), [clearHoldTimer]);
 
   /* iPad/iOS: touch nativo + bloquear scroll/bounce mientras se dibuja */
   useEffect(() => {
@@ -311,10 +485,11 @@ export function StageCanvasLayer({
       moveStroke(touch.clientX, touch.clientY);
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: TouchEvent) => {
       if (!touchDrawingRef.current) return;
       touchDrawingRef.current = false;
-      endStroke();
+      const touch = e.changedTouches[0];
+      if (touch) finishInteraction(touch.clientX, touch.clientY);
     };
 
     el.addEventListener("touchstart", onTouchStart, { passive: false });
@@ -330,7 +505,7 @@ export function StageCanvasLayer({
       el.removeEventListener("touchend", onTouchEnd);
       el.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [beginStroke, enabled, endStroke, moveStroke]);
+  }, [beginStroke, enabled, finishInteraction, moveStroke]);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!enabled || e.pointerType === "touch") return;
@@ -353,7 +528,7 @@ export function StageCanvasLayer({
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
-    endStroke();
+    finishInteraction(e.clientX, e.clientY);
   };
 
   return (

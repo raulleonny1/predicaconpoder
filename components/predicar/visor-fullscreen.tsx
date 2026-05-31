@@ -177,7 +177,15 @@ function VisorControls() {
             <li>
               <strong className="text-white">✓ Visto</strong>: toca donde quieras poner un check.
             </li>
-            <li>Usa los botones ← → abajo (o teclado) para cambiar diapositiva sin apagar la pizarra.</li>
+            <li>
+              <strong className="text-white">Mantén ~1 s</strong> el dedo en el{" "}
+              <strong className="text-white">borde izquierdo</strong> (anterior) o{" "}
+              <strong className="text-white">derecho</strong> (siguiente), sin moverlo.
+            </li>
+            <li>
+              También puedes <strong className="text-white">deslizar</strong> horizontalmente o usar los botones ← →
+              abajo.
+            </li>
           </ul>
           <button
             type="button"
@@ -214,7 +222,7 @@ function VisorControls() {
           <span>
             {activeIndex + 1} / {stageBlocks.length}
           </span>
-          <span className="hidden sm:inline">← → navegar</span>
+          <span className="hidden sm:inline">← → · bordes 1 s · deslizar</span>
           <button
             type="button"
             onClick={toggleBlackScreen}
