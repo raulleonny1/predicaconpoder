@@ -40,6 +40,8 @@ import {
   pushLiveAnnotations,
   pushLivePresentation,
   pushLiveSermon,
+  shouldApplyRemoteSermon,
+  shouldPushLocalSermon,
   subscribeLiveAnnotations,
   subscribeLivePresentation,
   subscribeLiveSermon,
@@ -352,7 +354,7 @@ export function SermonProvider({
     saveSermon(updated, userIdRef.current);
 
     const uid = userIdRef.current;
-    if (uid && !applyingRemoteRef.current) {
+    if (uid && !applyingRemoteRef.current && shouldPushLocalSermon(updated)) {
       if (sermonPushTimerRef.current) clearTimeout(sermonPushTimerRef.current);
       sermonPushTimerRef.current = setTimeout(() => {
         void pushLiveSermon(uid, updated).catch(() => {});
@@ -620,24 +622,21 @@ export function SermonProvider({
     if (!hydrated || !userId) return;
 
     const unsubSermon = subscribeLiveSermon(userId, (remote) => {
+      const local = sermonRef.current;
+
       if (!remote) {
-        void pushLiveSermon(userId, sermonRef.current).catch(() => {});
-        return;
-      }
-      if (remote.updatedAt <= sermonRef.current.updatedAt) {
-        if (remote.updatedAt < sermonRef.current.updatedAt) {
-          void pushLiveSermon(userId, sermonRef.current).catch(() => {});
+        if (shouldPushLocalSermon(local)) {
+          void pushLiveSermon(userId, local).catch(() => {});
         }
         return;
       }
 
-      const prevId = sermonRef.current.id;
+      if (!shouldApplyRemoteSermon(local, remote)) return;
+
       applyingRemoteRef.current = true;
       setSermon(remote);
       saveSermon(remote, userId);
-      if (remote.id !== prevId) {
-        setAnnotations(createDefaultAnnotationsState(remote.id));
-      }
+      setAnnotations((prev) => ({ ...prev, sermonId: remote.id }));
       applyingRemoteRef.current = false;
     });
 

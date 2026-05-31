@@ -6,6 +6,7 @@ import { getColorHex, type AnnotationTool, type WhiteboardColor } from "@/lib/se
 import { cn } from "@/lib/utils";
 
 const POS_KEY = "pcp:wb-toolbar-pos";
+const ANCHOR_KEY = "pcp:wb-toolbar-anchor";
 const COLLAPSED_KEY = "pcp:wb-toolbar-collapsed";
 const DRAG_THRESHOLD_PX = 8;
 const BUBBLE_SIZE = 56;
@@ -42,10 +43,10 @@ function clampPos(
   };
 }
 
-function loadPos(bottomReserve: number): NormalizedPos {
+function loadAnchor(bottomReserve: number): NormalizedPos {
   if (typeof window === "undefined") return { x: 16, y: 72 };
   try {
-    const raw = sessionStorage.getItem(POS_KEY);
+    const raw = sessionStorage.getItem(ANCHOR_KEY) ?? sessionStorage.getItem(POS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as NormalizedPos;
       if (typeof parsed.x === "number" && typeof parsed.y === "number") {
@@ -56,6 +57,15 @@ function loadPos(bottomReserve: number): NormalizedPos {
     /* ignore */
   }
   return clampPos(window.innerWidth - BUBBLE_SIZE - 16, 72, BUBBLE_SIZE, BUBBLE_SIZE, bottomReserve);
+}
+
+function saveAnchor(anchor: NormalizedPos) {
+  try {
+    sessionStorage.setItem(ANCHOR_KEY, JSON.stringify(anchor));
+    sessionStorage.setItem(POS_KEY, JSON.stringify(anchor));
+  } catch {
+    /* ignore */
+  }
 }
 
 function loadCollapsed(): boolean {
@@ -85,9 +95,12 @@ export function FloatingWhiteboardToolbar({
     moved: boolean;
   } | null>(null);
   const suppressTapRef = useRef(false);
+  const bubbleAnchorRef = useRef<NormalizedPos>({ x: 16, y: 72 });
 
   useEffect(() => {
-    setPos(loadPos(bottomReserve));
+    const anchor = loadAnchor(bottomReserve);
+    bubbleAnchorRef.current = anchor;
+    setPos(anchor);
     setCollapsed(loadCollapsed());
     setMounted(true);
   }, [bottomReserve]);
@@ -101,6 +114,15 @@ export function FloatingWhiteboardToolbar({
     }
   }, []);
 
+  const persistBubbleAnchor = useCallback(
+    (next: NormalizedPos) => {
+      bubbleAnchorRef.current = next;
+      saveAnchor(next);
+      persistPos(next);
+    },
+    [persistPos],
+  );
+
   const persistCollapsed = useCallback((next: boolean) => {
     setCollapsed(next);
     try {
@@ -109,6 +131,18 @@ export function FloatingWhiteboardToolbar({
       /* ignore */
     }
   }, []);
+
+  const minimizeToolbar = useCallback(() => {
+    const anchor = clampPos(
+      bubbleAnchorRef.current.x,
+      bubbleAnchorRef.current.y,
+      BUBBLE_SIZE,
+      BUBBLE_SIZE,
+      bottomReserve,
+    );
+    persistPos(anchor);
+    persistCollapsed(true);
+  }, [bottomReserve, persistCollapsed, persistPos]);
 
   const getPanelSize = useCallback(() => {
     const el = panelRef.current;
@@ -168,11 +202,21 @@ export function FloatingWhiteboardToolbar({
         persistCollapsed(false);
       } else if (drag.moved) {
         suppressTapRef.current = true;
+        if (collapsed) {
+          const anchor = clampPos(
+            drag.origX + (e.clientX - drag.startX),
+            drag.origY + (e.clientY - drag.startY),
+            BUBBLE_SIZE,
+            BUBBLE_SIZE,
+            bottomReserve,
+          );
+          persistBubbleAnchor(anchor);
+        }
       }
 
       dragRef.current = null;
     },
-    [collapsed, persistCollapsed],
+    [bottomReserve, collapsed, persistBubbleAnchor, persistCollapsed],
   );
 
   if (!mounted) return null;
@@ -191,7 +235,7 @@ export function FloatingWhiteboardToolbar({
     <div
       ref={panelRef}
       data-pcp-overlay
-      className="fixed z-[60] max-w-[min(calc(100vw-1.5rem),40rem)] select-none"
+      className="fixed z-[60] max-w-[min(calc(100vw-1.5rem),40rem)] select-none transition-[left,top] duration-200 ease-out"
       style={{
         left: pos.x,
         top: pos.y,
@@ -256,7 +300,7 @@ export function FloatingWhiteboardToolbar({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                persistCollapsed(true);
+                minimizeToolbar();
               }}
               onPointerDown={(e) => e.stopPropagation()}
               className="min-h-8 min-w-8 rounded-full bg-white/10 px-3 py-1 font-bold text-white hover:bg-white/20"

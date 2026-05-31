@@ -7,6 +7,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { getClientFirestore } from "@/lib/firebase-client";
+import { sermonHasMeaningfulContent } from "@/lib/sermon/local-sermons";
 import type { StageAnnotationsState } from "@/lib/sermon/stage-annotations";
 import type { PresentationState, SermonDocument } from "@/lib/sermon/types";
 
@@ -28,6 +29,22 @@ function parsePresentationUpdatedAt(data: Record<string, unknown>): number {
   if (typeof data.clientUpdatedAt === "number") return data.clientUpdatedAt;
   const ts = data.updatedAt as Timestamp | undefined;
   return ts?.toDate?.()?.getTime?.() ?? 0;
+}
+
+/** Preferir remoto si tiene contenido real y el local está vacío/plantilla, o si es más reciente. */
+export function shouldApplyRemoteSermon(local: SermonDocument, remote: SermonDocument): boolean {
+  const localEmpty = !sermonHasMeaningfulContent(local);
+  const remoteHasContent = sermonHasMeaningfulContent(remote);
+
+  if (localEmpty && remoteHasContent) return true;
+  if (remoteHasContent && !localEmpty && remote.updatedAt > local.updatedAt) return true;
+  if (!remoteHasContent && !localEmpty) return false;
+  return remote.updatedAt > local.updatedAt;
+}
+
+/** Solo publicar a Firestore si hay contenido real (nunca la plantilla vacía). */
+export function shouldPushLocalSermon(local: SermonDocument): boolean {
+  return sermonHasMeaningfulContent(local);
 }
 
 export function subscribeLiveSermon(
